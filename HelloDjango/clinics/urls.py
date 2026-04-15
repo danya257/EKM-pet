@@ -10,7 +10,7 @@ urlpatterns = [
     path('add/', views.ClinicCreateView.as_view(), name='clinic_add'),  # ← добавьте эту строку
     path('<int:pk>/', views.ClinicDetailView.as_view(), name='clinic_detail'),
     path('public/', views.PublicClinicListView.as_view(), name='clinic_list_public'),
-    path('register/', views.ClinicRegisterView.as_view(), name='clinic_register'),
+    # path('register/', views.ClinicRegisterView.as_view(), name='clinic_register'),  # Скрыто для пользователей
     
     # Маршруты для дашборда и ветеринаров
     path('dashboard/', views.ClinicDashboardView.as_view(), name='dashboard'),

@@ -586,7 +586,6 @@
           style="color: rgb(61, 61, 248); text-decoration: none; font-weight: 500;">Клиники</a>
         {% if user.is_authenticated %}
         <a href="{% url 'pets:pet_list' %}">Питомцы</a>
-        <a href="{% url 'medical_records:record_list' %}">Медицинская история</a>
         <a href="{% url 'users:profile' %}">Профиль</a>
         <a href="{% url 'users:logout' %}" class="btn-outline">Выйти</a>
         {% else %}

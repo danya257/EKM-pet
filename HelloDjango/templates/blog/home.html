@@ -8,7 +8,7 @@
   <p>Полезные статьи о здоровье, уходе и воспитании ваших питомцев.</p>
   
   {% if user.is_staff %}
-    <a href="{% url 'blog:article_create' %}" class="btn" style="background: #28a745; margin-top: 1rem;">+ Новая статья</a>
+    <a href="{% url 'blog:article_create' %}" class="btn" style="background: #28a745; margin-top: 1rem;">Добавление статьи</a>
   {% endif %}
 </div>
 
@@ -41,7 +41,7 @@
         Статьи скоро появятся!
       </p>
       {% if user.is_staff %}
-        <a href="{% url 'blog:article_create' %}" class="btn" style="margin-top: 1.5rem;">Написать первую статью</a>
+        <a href="{% url 'blog:article_create' %}" class="btn" style="margin-top: 1.5rem;">Добавление статьи</a>
       {% endif %}
     </div>
   {% endfor %}

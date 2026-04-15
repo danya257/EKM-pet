@@ -40,6 +40,18 @@ class CustomLoginView(LoginView):
         form.fields['password'].widget.attrs.update({'class': 'form-control'})
         return form
 
+class CustomLogoutView(LogoutView):
+    """Кастомный view для выхода из аккаунта (использует POST запрос)"""
+    http_method_names = ['post', 'get']
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == 'GET':
+            # Для GET запроса просто перенаправляем на главную после logout
+            from django.contrib.auth import logout
+            logout(request)
+            return redirect(reverse_lazy('blog:home'))
+        return super().dispatch(request, *args, **kwargs)
+
 class UserRegisterForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = User
