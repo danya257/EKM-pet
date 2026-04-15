@@ -52,7 +52,7 @@
             <p style="font-size: 0.95rem; margin-bottom: 0.5rem;">{{ record.get_record_type_display }}</p>
             {% if record.description %}<p>{{ record.description }}</p>{% endif %}
             {% if record.document %}
-              <a href="{{ record.document.url }}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">📎 Прикреплённый документ</a>
+              <a href="{{ record.document.url }}" target="_blank" class="btn btn-sm" style="margin-top: 0.5rem; padding: 6px 12px; font-size: 0.85rem;">📎 Скачать документ</a>
             {% endif %}
           </div>
         {% endfor %}

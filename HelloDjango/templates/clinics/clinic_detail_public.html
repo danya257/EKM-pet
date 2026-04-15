@@ -15,15 +15,29 @@
   {% endif %}
 
   <!-- Услуги -->
-  <h2>Услуги</h2>
+  <h2 style="margin-top: 1.5rem;">Услуги</h2>
   {% if clinic.services.all %}
-    <ul>
+    <ul style="margin-bottom: 1.5rem;">
       {% for service in clinic.services.all %}
         <li>{{ service.name }} — {{ service.price }} руб.</li>
       {% endfor %}
     </ul>
   {% else %}
-    <p>Услуги пока не добавлены.</p>
+    <p style="margin-bottom: 1.5rem;">Услуги пока не добавлены.</p>
+  {% endif %}
+
+  <!-- Часы работы (если есть) -->
+  {% if clinic.working_hours %}
+    <h2 style="margin-top: 1.5rem;">Часы работы</h2>
+    <p style="margin-bottom: 1.5rem;">{{ clinic.working_hours|linebreaks }}</p>
+  {% endif %}
+
+  <!-- Отзывы (если есть) -->
+  {% if clinic.reviews %}
+    <h2 style="margin-top: 1.5rem;">Отзывы</h2>
+    <div style="margin-bottom: 1.5rem;">
+      {{ clinic.reviews|linebreaks }}
+    </div>
   {% endif %}
 
   <!-- Кнопка чата (для владельцев) -->
