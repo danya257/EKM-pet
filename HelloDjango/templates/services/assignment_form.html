@@ -1,0 +1,34 @@
+<!-- services/templates/services/assignment_form.html -->
+{% extends 'base.html' %}
+{% block title %}Назначить ветеринара — {{ service.name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1 style="text-align: center; margin-bottom: 1.5rem;">👨‍⚕️ Назначить ветеринара</h1>
+  <p style="text-align: center; color: var(--gray); margin-bottom: 2rem;">
+    Услуга: <strong>{{ service.name }}</strong> в клинике <strong>{{ clinic.name }}</strong>
+  </p>
+
+  <form method="post" style="max-width: 600px; margin: 0 auto;">
+    {% csrf_token %}
+    
+    <div class="input-group">
+      {{ form.vet }}
+      <label for="{{ form.vet.id_for_label }}">Выберите ветеринара</label>
+    </div>
+
+    <div class="form-group" style="margin: 1.5rem 0;">
+      <label for="{{ form.available_slots_raw.id_for_label }}">Укажите доступные слоты</label>
+      {{ form.available_slots_raw }}
+      <small style="color: var(--gray); display: block; margin-top: 0.3rem;">
+        {{ form.available_slots_raw.help_text }}
+      </small>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="btn" style="flex: 1;">✅ Назначить</button>
+      <a href="javascript:history.back()" class="btn" style="background: #6c757d; flex: 1;">← Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,59 @@
+<!-- templates/users/profile.html -->
+{% extends 'base.html' %}
+
+{% block title %}Профиль — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>👤 Мой профиль</h1>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+    <div class="profile-item">
+      <div class="profile-label">Имя пользователя</div>
+      <div class="profile-value">{{ user.username }}</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-label">Имя</div>
+      <div class="profile-value">{{ user.first_name|default:"—" }}</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-label">Фамилия</div>
+      <div class="profile-value">{{ user.last_name|default:"—" }}</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-label">Email</div>
+      <div class="profile-value">{{ user.email|default:"—" }}</div>
+    </div>
+    <div class="profile-item">
+      <div class="profile-label">Роль</div>
+      <div class="profile-value" style="color: var(--primary); font-weight: 600;">
+        {{ user.get_user_type_display }}
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'core:dashboard' %}" class="btn">← Вернуться в кабинет</a>
+  </div>
+</div>
+
+<style>
+  .profile-item {
+    padding: 1rem;
+    background: #f9fbfd;
+    border-radius: var(--radius);
+    border: 1px solid #eef2f7;
+  }
+  .profile-label {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+  }
+  .profile-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark);
+  }
+</style>
+{% endblock %}

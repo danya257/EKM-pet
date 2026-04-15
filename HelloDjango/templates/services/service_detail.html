@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h1>{{ service.name }}</h1>
+  <p><strong>Клиника:</strong> {{ clinic.name }}</p>
+  <p><strong>Цена:</strong> {{ service.price }} руб.</p>
+  {% if service.description %}<p>{{ service.description }}</p>{% endif %}
+
+  <div style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2>Назначенные ветеринары</h2>
+      <a href="{% url 'services:assignment_create' clinic.id service.id %}" 
+   class="btn" 
+   style="background: #17a2b8; padding: 8px 16px; font-size: 0.95rem; display: inline-block;">
+  👨‍⚕️ Назначить ветеринара
+</a>
+    </div>
+    {% for assign in assignments %}
+      <div style="padding: 1rem; background: #f0f8ff; border-radius: var(--radius); margin-bottom: 0.8rem;">
+        <strong>{{ assign.vet.get_full_name|default:assign.vet.username }}</strong>
+        <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.9rem;">
+          {{ assign.available_slots|json_script:"slots" }}
+          <!-- Можно красиво отформатировать через JS -->
+        </div>
+      </div>
+    {% empty %}
+      <p>Нет назначенных ветеринаров.</p>
+    {% endfor %}
+  </div>
+
+  <div style="margin-top: 2rem;">
+    <a href="{% url 'services:service_list' clinic.id %}" class="btn" style="background: #6c757d;">← Назад к услугам</a>
+  </div>
+</div>
+{% endblock %}

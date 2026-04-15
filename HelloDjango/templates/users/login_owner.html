@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Вход для владельцев — EKM-PET{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="text-center mb-0">
+    <h1>👋 Владельцы питомцев</h1>
+    <p>Войдите, чтобы управлять медицинскими картами</p>
+  </div>
+  <form method="post" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger" style="margin-bottom: 1rem;">
+        {% for error in form.non_field_errors %}
+          <p style="margin: 0;">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="input-group">{{ form.username }}<label>Имя пользователя</label></div>
+    <div class="input-group">{{ form.password }}<label>Пароль</label></div>
+    <button type="submit" class="btn" style="width: 100%;">Войти как владелец</button>
+  </form>
+  <div class="text-center mt-4">
+    <p class="mb-0">
+      Представитель клиники? <a href="{% url 'users:login_clinic' %}" class="btn-link">Войти здесь</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Чат — {{ chat.vet.username }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>
+      💬 Чат с 
+      {% if user == chat.owner %}
+        {{ chat.vet.get_full_name|default:chat.vet.username }} ({{ chat.clinic.name }})
+      {% else %}
+        {{ chat.owner.get_full_name|default:chat.owner.username }}
+      {% endif %}
+    </h1>
+    <a href="{% url 'chat:chat_list' %}" class="btn" style="background: #6c757d; padding: 6px 12px; font-size: 0.9rem;">← Все чаты</a>
+  </div>
+
+  <div style="height: 400px; overflow-y: auto; border: 1px solid #e1e5eb; border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem; background: #fcfdff;">
+    {% for msg in messages %}
+      <div style="margin-bottom: 1rem;">
+        <div style="font-weight: 600; color: {% if msg.sender == user %}var(--primary){% else %}var(--gray){% endif %};">
+          {{ msg.sender.get_full_name|default:msg.sender.username }} 
+          <span style="font-weight: normal; font-size: 0.85rem; color: #999;">{{ msg.timestamp|date:"H:i" }}</span>
+        </div>
+        <div style="margin-top: 0.3rem;">{{ msg.text|linebreaks }}</div>
+      </div>
+    {% empty %}
+      <p style="color: var(--gray); text-align: center;">Чат пуст. Напишите первое сообщение!</p>
+    {% endfor %}
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="input-group">
+      <textarea name="text" placeholder="Введите сообщение..." style="min-height: 80px; resize: vertical;" required></textarea>
+      <label for="id_text">Сообщение</label>
+    </div>
+    <button type="submit" class="btn">Отправить</button>
+  </form>
+</div>
+
+<script>
+  // Автопрокрутка вниз
+  const chatBox = document.querySelector('div[style*="height: 400px"]');
+  if (chatBox) {
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+{% endblock %}

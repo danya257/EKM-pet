@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load pet_tags %}
+{% block title %}Мои питомцы — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>Мои питомцы</h1>
+    <a href="{% url 'pets:pet_add' %}" class="btn">+ Добавить питомца</a>
+  </div>
+
+  {% if pets %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+      {% for pet in pets %}
+        <div class="pet-card" style="
+          background: white;
+          border-radius: var(--radius);
+          box-shadow: var(--card-shadow);
+          overflow: hidden;
+          transition: transform 0.3s, box-shadow 0.3s;
+        ">
+          <div style="
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+          ">
+            <div style="font-size: 2.8rem;">
+  {% animal_icon pet.species %}
+</div>  
+            <h3 style="text-align: center; margin: 0; color: var(--primary-dark);">{{ pet.name }}</h3>
+            <p style="text-align: center; color: var(--gray); font-size: 0.95rem;">{{ pet.get_species_display }}</p>
+            {% if pet.breed %}<p style="text-align: center; font-size: 0.9rem;">Порода: {{ pet.breed }}</p>{% endif %}
+            {% if pet.birth_date %}
+              <p style="text-align: center; font-size: 0.9rem;">ДР: {{ pet.birth_date }}</p>
+            {% endif %}
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
+              <a href="{% url 'pets:pet_detail' pet.pk %}" class="btn" style="flex: 1; padding: 8px; font-size: 0.9rem;">Подробнее</a>
+              <a href="{% url 'pets:pet_qr_download' pet.qr_uuid %}" class="btn" style="flex: 1; padding: 8px; font-size: 0.9rem; background: var(--success);">QR</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="text-align: center; color: var(--gray); font-style: italic;">
+      У вас пока нет питомцев. <a href="{% url 'pets:pet_add' %}" class="btn-link">Добавьте первого!</a>
+    </p>
+  {% endif %}
+</div>
+
+<style>
+  .pet-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  }
+</style>
+{% endblock %}

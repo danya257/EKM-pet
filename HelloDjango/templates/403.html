@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}403 — Доступ запрещён{% endblock %}
+{% block content %}
+<div class="card" style="text-align: center; padding: 3rem;">
+  <div style="font-size: 6rem; margin-bottom: 1.5rem;">🔒</div>
+  <h1>403 — Доступ запрещён</h1>
+  <p style="font-size: 1.1rem; color: var(--gray); margin: 1.2rem 0;">
+    У вас нет прав для просмотра этой страницы.<br>
+    Возможно, вы зашли не в свой раздел.
+  </p>
+  {% if user.is_authenticated %}
+    {% if user.user_type == 'owner' %}
+      <a href="{% url 'pets:pet_list' %}" class="btn" style="margin-top: 1.5rem;">Мои питомцы</a>
+    {% else %}
+      <a href="{% url 'clinics:dashboard' %}" class="btn" style="margin-top: 1.5rem;">Мой кабинет</a>
+    {% endif %}
+  {% else %}
+    <a href="{% url 'users:login_owner' %}" class="btn" style="margin-top: 1.5rem;">Войти как владелец</a>
+  {% endif %}
+</div>
+{% endblock %}

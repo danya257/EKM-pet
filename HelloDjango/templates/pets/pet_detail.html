@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load pet_tags %}
+
+{% block title %}{{ pet.name }} — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+    <div style="font-size: 2.8rem;">
+  {% animal_icon pet.species %}
+</div>
+    <div>
+      <h1 style="margin: 0; color: var(--primary-dark);">{{ pet.name }}</h1>
+      <p style="margin: 0; color: var(--gray);">{{ pet.get_species_display }}{% if pet.breed %}, {{ pet.breed }}{% endif %}</p>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin: 1.5rem 0;">
+    <div>
+      <strong>Дата рождения</strong>
+      <p>{{ pet.birth_date|default:"—" }}</p>
+    </div>
+    <div>
+      <strong>Номер чипа</strong>
+      <p>{{ pet.chip_number|default:"—" }}</p>
+    </div>
+  </div>
+
+  <div style="margin: 2rem 0; padding-top: 1.5rem; border-top: 1px solid #eee;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <h2 style="font-size: 1.4rem; color: var(--primary-dark);">Медицинская история</h2>
+      <a href="{% url 'medical_records:record_add' pet_pk=pet.pk %}" class="btn" style="padding: 8px 16px; font-size: 0.95rem;">+ Добавить запись</a>
+    </div>
+
+    {% if pet.medical_records.all %}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        {% for record in pet.medical_records.all %}
+          <div style="
+            background: #f9fbfd;
+            padding: 1rem;
+            border-radius: var(--radius);
+            border-left: 4px solid 
+              {% if record.record_type == 'vaccination' %}var(--success)
+              {% elif record.record_type == 'diagnosis' %}#e74a3b
+              {% elif record.record_type == 'procedure' %}#f6c23e
+              {% else %}var(--gray){% endif %};
+          ">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+              <strong>{{ record.title }}</strong>
+              <span style="color: var(--gray); font-size: 0.9rem;">{{ record.date }}</span>
+            </div>
+            <p style="font-size: 0.95rem; margin-bottom: 0.5rem;">{{ record.get_record_type_display }}</p>
+            {% if record.description %}<p>{{ record.description }}</p>{% endif %}
+            {% if record.document %}
+              <a href="{{ record.document.url }}" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">📎 Прикреплённый документ</a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--gray);">Нет записей. <a href="{% url 'medical_records:record_add' pet_pk=pet.pk %}" class="btn-link">Добавьте первую</a>.</p>
+    {% endif %}
+  </div>
+
+  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
+    <h2 style="font-size: 1.4rem; margin-bottom: 1rem;">QR-паспорт</h2>
+    <p style="margin-bottom: 1rem;">Этот QR-код ведёт на публичную страницу с данными питомца. Его можно распечатать или показать ветеринару.</p>
+    <div style="display: flex; gap: 1rem;">
+      <a href="{% url 'pets:pet_qr_view' pet.qr_uuid %}" target="_blank" class="btn" style="flex: 1;">Открыть паспорт</a>
+      <a href="{% url 'pets:pet_qr_download' pet.qr_uuid %}" class="btn" style="flex: 1; background: var(--success);">Скачать QR</a>
+    </div>
+  </div>
+
+  <div style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'pets:pet_edit' pet.pk %}" class="btn" style="background: var(--primary);">✏️ Редактировать данные</a>
+    <a href="{% url 'pets:pet_list' %}" class="btn" style="background: #6c757d;">← Назад к списку</a>
+  </div>
+</div>
+{% endblock %}

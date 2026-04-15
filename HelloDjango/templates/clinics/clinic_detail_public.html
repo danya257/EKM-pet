@@ -1,0 +1,34 @@
+<!-- templates/clinics/clinic_detail_public.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h1>{{ clinic.name }}</h1>
+  <p><strong>📍 Адрес:</strong> {{ clinic.address }}</p>
+  {% if clinic.phone %}<p><strong>📞 Телефон:</strong> {{ clinic.phone }}</p>{% endif %}
+  {% if clinic.email %}<p><strong>✉️ Email:</strong> {{ clinic.email }}</p>{% endif %}
+  {% if clinic.website %}
+    <p><strong>🌐 Сайт:</strong> <a href="{{ clinic.website }}" target="_blank">{{ clinic.website }}</a></p>
+  {% endif %}
+  {% if clinic.description %}
+    <p><strong>📋 Описание:</strong></p>
+    <p>{{ clinic.description|linebreaks }}</p>
+  {% endif %}
+
+  <!-- Услуги -->
+  <h2>Услуги</h2>
+  {% if clinic.services.all %}
+    <ul>
+      {% for service in clinic.services.all %}
+        <li>{{ service.name }} — {{ service.price }} руб.</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Услуги пока не добавлены.</p>
+  {% endif %}
+
+  <!-- Кнопка чата (для владельцев) -->
+  {% if user.is_authenticated and user.user_type == 'owner' %}
+    <a href="{% url 'clinics:vet_list' %}" class="btn" style="margin-top: 1.5rem;">Написать ветеринару</a>
+  {% endif %}
+</div>
+{% endblock %}

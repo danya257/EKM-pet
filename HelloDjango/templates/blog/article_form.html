@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Создать статью — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Новая статья</h1>
+
+  <form method="post" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+    
+    <div class="input-group">
+      {{ form.title }}
+      <label for="{{ form.title.id_for_label }}">Заголовок</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.slug }}
+      <label for="{{ form.slug.id_for_label }}">Ссылка (англ., через дефис)</label>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1.5rem;">
+      <label for="{{ form.content.id_for_label }}">Содержание</label>
+      {{ form.content }}
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1.5rem;">
+      <label>
+        {{ form.is_published }}
+        Опубликовать сразу?
+      </label>
+    </div>
+
+    <div style="display: flex; gap: 1rem;">
+      <button type="submit" class="btn">Сохранить статью</button>
+      <a href="{% url 'blog:home' %}" class="btn" style="background: #6c757d;">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

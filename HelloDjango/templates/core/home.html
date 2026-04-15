@@ -1,0 +1,57 @@
+<!-- templates/core/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}EKM-PET — Цифровой ветеринарный паспорт{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin: 2rem auto; max-width: 700px;">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">🐾</div>
+    <h1 style="font-size: 2.2rem; color: var(--primary-dark); margin-bottom: 1rem;">
+        EKM-PET — цифровой ветеринарный паспорт
+    </h1>
+    <p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 2rem;">
+        Все медицинские данные вашего питомца — всегда под рукой
+    </p>
+
+    {% if user.is_authenticated %}
+    <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">
+        Здравствуйте, <strong>{{ user.get_full_name|default:user.username }}</strong>!
+    </p>
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="{% url 'core:dashboard' %}" class="btn">Перейти в личный кабинет</a>
+        <a href="{% url 'users:logout' %}" class="btn" style="background: #6c757d;">Выйти</a>
+    </div>
+    {% else %}
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem;">
+        <a href="{% url 'users:login_owner' %}" class="btn">Войти как владелец</a>
+        <a href="{% url 'users:login_clinic' %}" class="btn" style="background: #6f42c1;">Войти как клиника</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top: 3rem;">
+    <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary-dark);">Возможности платформы</h2>
+    <ul style="list-style: none; padding: 0; max-width: 600px; margin: 0 auto;">
+        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
+            <span style="font-size: 1.4rem;">✅</span>
+            <span><strong>Электронная медицинская история</strong> — ведите записи прививок, анализов, диагнозов и
+                процедур.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
+            <span style="font-size: 1.4rem;">📱</span>
+            <span><strong>Юридически значимый QR-паспорт</strong> — всегда с вами, легко показать ветеринару или при
+                путешествиях.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
+            <span style="font-size: 1.4rem;">🔗</span>
+            <span><strong>Синхронизация с клиниками</strong> — данные автоматически обновляются при посещении
+                партнёрских ветцентров.</span>
+        </li>
+        <li style="display: flex; align-items: flex-start; gap: 12px;">
+            <span style="font-size: 1.4rem;">💡</span>
+            <span><strong>Персонализированные рекомендации</strong> — напоминания о вакцинации, уходе и
+                профилактике.</span>
+        </li>
+    </ul>
+</div>
+{% endblock %}

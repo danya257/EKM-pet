@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ record.title }} — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.2rem;">
+    <div>
+      <span style="
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        {% if record.record_type == 'vaccination' %}background: #d1f0e0; color: #107d55;
+        {% elif record.record_type == 'diagnosis' %}background: #fde8e8; color: #a82a2a;
+        {% elif record.record_type == 'procedure' %}background: #fef5d4; color: #856404;
+        {% elif record.record_type == 'lab_test' %}background: #e1f0ff; color: #1a5a96;
+        {% elif record.record_type == 'medication' %}background: #e6d3f0; color: #5a2a85;
+        {% elif record.record_type == 'surgery' %}background: #f8d7da; color: #842029;
+        {% else %}background: #e9ecef; color: var(--gray);
+        {% endif %}
+      ">
+        {{ record.get_record_type_display }}
+      </span>
+      <h1 style="margin: 0;">{{ record.title }}</h1>
+    </div>
+    <span style="background: #e9ecef; color: var(--gray); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">
+      {{ record.date }}
+    </span>
+  </div>
+
+  <div style="margin: 1.5rem 0; padding: 1.2rem; background: #f9fbfd; border-radius: var(--radius);">
+    {% if record.description %}
+      <p>{{ record.description|linebreaks }}</p>
+    {% else %}
+      <p style="color: var(--gray); font-style: italic;">Описание отсутствует.</p>
+    {% endif %}
+  </div>
+
+  {% if record.document %}
+    <div style="margin: 1.5rem 0;">
+      <h3 style="font-size: 1.1rem; margin-bottom: 0.8rem;">Прикреплённый документ</h3>
+      <a href="{{ record.document.url }}" target="_blank" class="btn" style="background: var(--success); padding: 10px 16px; font-size: 0.95rem;">
+        📎 Открыть документ
+      </a>
+    </div>
+  {% endif %}
+
+  <div style="margin-top: 2rem; color: var(--gray); font-size: 0.95rem;">
+    <p>Запись создана: {{ record.created_at|date:"d.m.Y H:i" }}</p>
+    <p>Автор: {{ record.created_by.get_full_name|default:record.created_by.username|default:"Система" }}</p>
+  </div>
+
+  <div style="margin-top: 2rem; text-align: center;">
+    <a href="{% url 'pets:pet_detail' record.pet.pk %}" class="btn" style="background: #6c757d;">← Назад к карте питомца</a>
+  </div>
+</div>
+{% endblock %}

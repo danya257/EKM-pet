@@ -1,0 +1,31 @@
+<!-- templates/users/login.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card">
+  <div class="text-center mb-0">
+    <h1>👋 Добро пожаловать!</h1>
+    <p>Войдите в свой аккаунт</p>
+  </div>
+
+  <form method="post" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+
+    <div class="input-group">
+      {{ form.username }}
+      <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.password }}
+      <label for="{{ form.password.id_for_label }}">Пароль</label>
+    </div>
+
+    <button type="submit" class="btn" style="width: 100%;">Войти</span></button>
+  </form>
+
+  <div class="text-center mt-4">
+    <p class="mb-0">Нет аккаунта? <a href="{% url 'users:register' %}" class="btn-link">Зарегистрироваться</a></p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Новая медицинская запись — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Новая запись для питомца <strong>{{ pet.name }}</strong></h1>
+
+  <form method="post" enctype="multipart/form-data" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+
+    <div class="input-group">
+      {{ form.record_type }}
+      <label for="{{ form.record_type.id_for_label }}">Тип записи</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.title }}
+      <label for="{{ form.title.id_for_label }}">Заголовок</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.description }}
+      <label for="{{ form.description.id_for_label }}">Описание (опционально)</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.date }}
+      <label for="{{ form.date.id_for_label }}">Дата события</label>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 1.5rem;">
+      <label for="{{ form.document.id_for_label }}">Документ (фото, PDF, анализ)</label>
+      {{ form.document }}
+      <p style="font-size: 0.9rem; color: var(--gray); margin-top: 0.3rem;">
+        Поддерживаются: JPG, PNG, PDF (макс. 5 МБ)
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="btn" style="flex: 1;">Сохранить запись</button>
+      <a href="{% url 'pets:pet_detail' pet.pk %}" class="btn" style="background: #6c757d; flex: 1;">Отмена</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  /* Стиль для файла */
+  input[type="file"] {
+    padding: 8px 0;
+    border: 2px dashed #d1d7e0;
+    border-radius: var(--radius);
+    background: #f9fbfd;
+    width: 100%;
+    font-size: 0.95rem;
+    color: var(--gray);
+  }
+  input[type="file"]::file-selector-button {
+    margin-right: 12px;
+    border: none;
+    background: var(--primary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  input[type="file"]::file-selector-button:hover {
+    background: var(--primary-dark);
+  }
+</style>
+{% endblock %}

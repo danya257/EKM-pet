@@ -1,0 +1,26 @@
+<!-- templates/clinics/vet_list.html -->
+{% extends 'base.html' %}
+{% block title %}Ветеринары — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>👨‍⚕️ Ветеринары</h1>
+    <!-- Можно добавить кнопку "Пригласить", но для диплома — не обязательно -->
+  </div>
+
+  {% if vets %}
+    <div style="margin-top: 1.5rem; display: grid; gap: 1rem;">
+      {% for vet in vets %}
+        <div style="padding: 1.2rem; background: #f9fbfd; border-radius: var(--radius);">
+          <h3>{{ vet.get_full_name|default:vet.username }}</h3>
+          <p><strong>Роль:</strong> {{ vet.get_user_type_display }}</p>
+          <a href="{% url 'clinics:vet_detail' vet.id %}" class="btn" style="padding: 6px 12px; font-size: 0.9rem;">Профиль</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="margin-top: 1.5rem;">Ветеринары ещё не добавлены.</p>
+  {% endif %}
+</div>
+{% endblock %}

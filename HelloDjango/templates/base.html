@@ -1,0 +1,712 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}EKM-PET — Цифровой ветеринарный паспорт{% endblock %}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+  <style>
+    :root {
+      --primary: #5e72e4;
+      --primary-light: #7b8fe8;
+      --accent: #46d1cc;
+      --bg: #f9fbfe;
+      --text: #2d3748;
+      --text-light: #718096;
+      --border: #edf2f7;
+      --radius: 14px;
+      --shadow: 0 6px 20px rgba(94, 114, 228, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #d7e3f5ad;
+      color: var(--text);
+      line-height: 1.65;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px;
+      width: 100%;
+    }
+
+    /* Анимированный прозрачный header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 16px 0;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(204, 234, 237, 0.6);
+      border-bottom: 1px solid rgba(94, 114, 228, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    header .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Анимация перелива у логотипа */
+    .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      background: linear-gradient(90deg, #5e72e4, #46d1cc, #5e72e4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      background-size: 200% 200%;
+      animation: gradientShift 8s ease infinite;
+      white-space: nowrap;
+    }
+
+    .logo::before {
+      content: "🐾";
+      font-size: 1.7rem;
+      background: linear-gradient(90deg, #5e72e4, #46d1cc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: gradientShift 8s ease infinite;
+    }
+
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* Мобильное меню */
+    .mobile-menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text);
+      padding: 8px;
+    }
+
+    .auth-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .auth-nav a {
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--text);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 50px;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+
+    .auth-nav a:hover {
+      background: rgba(94, 114, 228, 0.12);
+      color: var(--primary);
+    }
+
+    main {
+      padding: 2.5rem 0 2rem;
+      flex: 1;
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 1.4rem;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.2rem;
+      color: var(--text);
+    }
+
+    h3 {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    /* Floating inputs */
+    .input-group {
+      position: relative;
+      margin-bottom: 1.4rem;
+    }
+
+    .input-group input,
+    .input-group select,
+    .input-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: white;
+      transition: all 0.3s ease;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .input-group label {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      font-size: 1rem;
+      color: var(--text-light);
+      pointer-events: none;
+      transition: all 0.3s ease;
+      background: transparent;
+      z-index: 10;
+    }
+
+    /* Скрываем подсказку при фокусе или когда есть значение */
+    .input-group input:focus ~ label,
+    .input-group input:not(:placeholder-shown) ~ label,
+    .input-group input.has-value ~ label,
+    .input-group input[type="password"]:focus ~ label,
+    .input-group input[type="password"]:not(:placeholder-shown) ~ label,
+    .input-group input[type="password"].has-value ~ label,
+    .input-group textarea:focus ~ label,
+    .input-group textarea:not(:placeholder-shown) ~ label,
+    .input-group textarea.has-value ~ label,
+    .input-group select:focus ~ label,
+    .input-group select:not([value=""]) ~ label {
+      top: -10px;
+      left: 12px;
+      font-size: 0.8rem;
+      background: white;
+      padding: 0 6px;
+      color: var(--primary);
+      border-radius: 4px;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus,
+    .input-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(94, 114, 228, 0.15);
+    }
+
+    .input-group input::placeholder {
+      opacity: 0;
+    }
+
+    /* Кнопки */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #000000;
+      text-decoration: none;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      background: var(--primary);
+      box-shadow: 0 4px 14px rgba(94, 114, 228, 0.3);
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(94, 114, 228, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-light {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 4px 12px rgba(94, 114, 228, 0.12);
+    }
+
+    .btn-light:hover {
+      background: #f0f4ff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(94, 114, 228, 0.2);
+    }
+
+    .btn-purple {
+      background: linear-gradient(135deg, #7b5eea, #46d1cc);
+      box-shadow: 0 4px 14px rgba(123, 94, 234, 0.3);
+      color: white;
+    }
+
+    .btn-purple:hover {
+      background: linear-gradient(135deg, #6a4ddb, #3acbc0);
+      box-shadow: 0 6px 20px rgba(123, 94, 234, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(94, 114, 228, 0.3);
+      color: var(--text);
+    }
+
+    .btn-outline:hover {
+      background: rgba(94, 114, 228, 0.1);
+      border-color: var(--primary);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Сообщения */
+    .alert {
+      padding: 1rem 1.3rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.3rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .alert-success {
+      background: #e8f7f6;
+      color: #0d9a93;
+      border-left: 4px solid var(--accent);
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      color: #e53e3e;
+      border-left: 4px solid #fc8181;
+    }
+
+    .alert-info {
+      background: #ebf8ff;
+      color: #3182ce;
+      border-left: 4px solid #63b3ed;
+    }
+
+    .alert-warning {
+      background: #fffaf0;
+      color: #c05621;
+      border-left: 4px solid #f6ad55;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    /* Таблицы */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f7fafc;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background: #f7fafc;
+    }
+
+    /* Ссылки */
+    a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Списки */
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 1rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Изображения */
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--radius);
+    }
+
+    /* Grid для карточек */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Мобильные стили */
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 16px;
+      }
+
+      header {
+        padding: 12px 0;
+      }
+
+      .mobile-menu-toggle {
+        display: block;
+      }
+
+      .auth-nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        flex-direction: column;
+        padding: 16px;
+        gap: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border-top: 1px solid var(--border);
+      }
+
+      .auth-nav.active {
+        display: flex;
+      }
+
+      .auth-nav a {
+        padding: 12px 16px;
+        border-radius: 10px;
+        text-align: center;
+      }
+
+      .logo {
+        font-size: 1.3rem;
+      }
+
+      .logo::before {
+        font-size: 1.5rem;
+      }
+
+      main {
+        padding: 1.5rem 0 1rem;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      h2 {
+        font-size: 1.3rem;
+      }
+
+      h3 {
+        font-size: 1.1rem;
+      }
+
+      .card {
+        padding: 1.5rem;
+        margin-bottom: 1.2rem;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: none;
+        padding: 12px 20px;
+      }
+
+      .btn-block-mobile {
+        width: 100%;
+      }
+
+      .auth-nav .btn {
+        max-width: none;
+      }
+
+      .input-group input,
+      .input-group select,
+      .input-group textarea {
+        padding: 12px 14px;
+        font-size: 16px; /* Предотвращает зум на iOS */
+      }
+
+      .input-group label {
+        font-size: 0.95rem;
+      }
+
+      table {
+        font-size: 0.85rem;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      footer {
+        padding: 1.5rem 0;
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        font-size: 1.2rem;
+      }
+
+      .logo::before {
+        font-size: 1.4rem;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      .card {
+        padding: 1.2rem;
+      }
+
+      .btn {
+        padding: 11px 18px;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Печать */
+    @media print {
+      header, footer, .no-print {
+        display: none !important;
+      }
+
+      body {
+        background: white;
+      }
+
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <a href="{% url 'blog:home' %}" class="logo">EKM-PET</a>
+      <button class="mobile-menu-toggle" aria-label="Меню">☰</button>
+      <nav class="auth-nav">
+        <a href="{% url 'clinics:clinic_list_public' %}"
+          style="color: rgb(61, 61, 248); text-decoration: none; font-weight: 500;">Клиники</a>
+        {% if user.is_authenticated %}
+        {% if user.user_type == 'owner' %}
+        <a href="{% url 'pets:pet_list' %}">Питомцы</a>
+        <a href="{% url 'chat:chat_list' %}">Чаты</a>
+        <a href="{% url 'blog:home' %}">Блог</a>
+        {% else %}
+        <a href="{% url 'clinics:dashboard' %}">Главная</a>
+        <a href="{% url 'clinics:vet_list' %}">Ветеринары</a>
+        <a href="{% url 'clinics:service_list' %}">Услуги</a>
+        {% endif %}
+        <a href="{% url 'users:logout' %}" class="btn-outline">Выйти</a>
+        {% else %}
+        <a href="{% url 'users:register' %}" class="btn-outline">Регистрация</a>
+        <a href="{% url 'users:login_owner' %}" class="btn-light">Войти</a>
+        <a href="{% url 'users:login_clinic' %}" class="btn btn-purple">Клиника</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="container">
+    &copy; 2025 EKM-PET — Цифровой ветеринарный паспорт. Забота о каждом хвостике.
+  </footer>
+
+  <!-- JS для инпутов и мобильного меню -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Мобильное меню
+      const menuToggle = document.querySelector('.mobile-menu-toggle');
+      const authNav = document.querySelector('.auth-nav');
+      
+      if (menuToggle && authNav) {
+        menuToggle.addEventListener('click', () => {
+          authNav.classList.toggle('active');
+          menuToggle.innerHTML = authNav.classList.contains('active') ? '✕' : '☰';
+        });
+        
+        // Закрыть меню при клике вне его
+        document.addEventListener('click', (e) => {
+          if (!authNav.contains(e.target) && !menuToggle.contains(e.target)) {
+            authNav.classList.remove('active');
+            menuToggle.innerHTML = '☰';
+          }
+        });
+      }
+
+      // Placeholder для floating labels
+      document.querySelectorAll('.input-group input, .input-group textarea')
+        .forEach(el => {
+          if (!el.hasAttribute('placeholder')) el.setAttribute('placeholder', ' ');
+        });
+
+      // Floating labels - скрываем подсказку при фокусе или наличии значения
+      document.querySelectorAll('.input-group').forEach(group => {
+        const input = group.querySelector('input, textarea, select');
+        const label = group.querySelector('label');
+        
+        if (input && label) {
+          // Функция проверки наличия значения
+          const checkValue = () => {
+            if (input.value && input.value.trim() !== '') {
+              input.classList.add('has-value');
+            } else {
+              input.classList.remove('has-value');
+            }
+          };
+          
+          // Проверяем при загрузке
+          checkValue();
+          
+          // Проверяем при изменении
+          input.addEventListener('input', checkValue);
+          input.addEventListener('change', checkValue);
+        }
+      });
+
+      // Toggle пароля
+      document.querySelectorAll('input[type="password"]').forEach(field => {
+        if (field.parentNode.querySelector('.toggle-password')) return;
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.innerHTML = '👁️';
+        Object.assign(toggle.style, {
+          position: 'absolute',
+          right: '12px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          background: 'none',
+          border: 'none',
+          color: '#a0aec0',
+          cursor: 'pointer',
+          fontSize: '1.2rem',
+          zIndex: '2'
+        });
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        field.parentNode.replaceChild(wrapper, field);
+        wrapper.appendChild(field);
+        wrapper.appendChild(toggle);
+        toggle.addEventListener('click', () => {
+          field.type = field.type === 'password' ? 'text' : 'password';
+          toggle.innerHTML = field.type === 'password' ? '👁️' : '🙈';
+        });
+      });
+
+      // Анимация кнопок
+      document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('mousedown', () => btn.style.transform = 'translateY(0)');
+        btn.addEventListener('mouseup', () => btn.style.transform = 'translateY(-2px)');
+      });
+    });
+  </script>
+</body>
+
+</html>

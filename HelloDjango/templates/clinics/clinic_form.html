@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить клинику — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>Добавить ветеринарную клинику</h1>
+
+  <form method="post" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+
+    <div class="input-group">
+      {{ form.name }}
+      <label for="{{ form.name.id_for_label }}">Название клиники</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.address }}
+      <label for="{{ form.address.id_for_label }}">Адрес</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.phone }}
+      <label for="{{ form.phone.id_for_label }}">Телефон</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.email }}
+      <label for="{{ form.email.id_for_label }}">Email</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.website }}
+      <label for="{{ form.website.id_for_label }}">Сайт (опционально)</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.description }}
+      <label for="{{ form.description.id_for_label }}">Описание (опционально)</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.admins }}
+      <label for="{{ form.admins.id_for_label }}">Администраторы (ветеринары)</label>
+    </div>
+
+    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+      <button type="submit" class="btn" style="flex: 1;">Сохранить</button>
+      <a href="{% url 'clinics:clinic_list' %}" class="btn" style="background: #6c757d; flex: 1;">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

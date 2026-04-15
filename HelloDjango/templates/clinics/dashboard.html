@@ -1,0 +1,49 @@
+<!-- templates/clinics/dashboard.html -->
+{% extends 'base.html' %}
+{% block title %}Дашборд — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>🏥 Дашборд клиники</h1>
+  {% if clinics.count == 1 %}
+    <p>Вы управляете клиникой: <strong>{{ clinics.first.name }}</strong></p>
+  {% else %}
+    <p>Вы управляете {{ clinics.count }} клиниками</p>
+  {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+  <!-- Карточка: Питомцы -->
+  <div class="card" style="text-align: center; padding: 1.5rem;">
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🐾</div>
+    <h3>{{ pets_count }}</h3>
+    <p>Питомцев обслужено</p>
+  </div>
+
+  <!-- Карточка: Сообщения -->
+  <div class="card" style="text-align: center; padding: 1.5rem;">
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">💬</div>
+    <h3>{{ unread_messages }}</h3>
+    <p>Непрочитанных сообщений</p>
+  </div>
+
+  <!-- Карточка: Записи -->
+  <div class="card" style="text-align: center; padding: 1.5rem;">
+    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📅</div>
+    <h3>{{ recent_records }}</h3>
+    <p>Записей за неделю</p>
+  </div>
+</div>
+
+<!-- Быстрые ссылки -->
+<div class="card" style="margin-top: 2rem;">
+  <h2>Быстрый доступ</h2>
+  <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem;">
+    {% for clinic in clinics %}
+      <a href="{% url 'clinics:clinic_detail' clinic.id %}" class="btn" style="padding: 8px 16px;">{{ clinic.name }}</a>
+      <a href="{% url 'services:service_list' clinic.id %}" class="btn" style="background: #17a2b8; padding: 8px 16px;">Услуги: {{ clinic.name }}</a>
+    {% endfor %}
+    <a href="{% url 'chat:chat_list' %}" class="btn" style="background: #ffc107; color: #212529; padding: 8px 16px;">Чаты</a>
+  </div>
+</div>
+{% endblock %}

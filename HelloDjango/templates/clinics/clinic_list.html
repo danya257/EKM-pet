@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ветеринарные клиники — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h1>Ветеринарные клиники</h1>
+    {% if user.is_authenticated and user.user_type == 'clinic_admin' %}
+      <a href="{% url 'clinics:clinic_add' %}" class="btn">+ Добавить клинику</a>
+    {% endif %}
+  </div>
+
+  {% if clinics %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.8rem; margin-top: 1rem;">
+      {% for clinic in clinics %}
+        <div class="clinic-card" style="
+          background: white;
+          border-radius: var(--radius);
+          box-shadow: var(--card-shadow);
+          overflow: hidden;
+          transition: transform 0.3s, box-shadow 0.3s;
+        ">
+          <div style="padding: 1.5rem;">
+            <h3 style="margin: 0 0 0.8rem; color: var(--primary-dark);">{{ clinic.name }}</h3>
+            <p style="color: var(--gray); line-height: 1.5; margin-bottom: 1rem;">{{ clinic.address }}</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 1rem;">
+              {% if clinic.phone %}
+                <span style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem;">
+                  📞 {{ clinic.phone }}
+                </span>
+              {% endif %}
+              {% if clinic.email %}
+                <span style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem;">
+                  ✉️ {{ clinic.email }}
+                </span>
+              {% endif %}
+              {% if clinic.website %}
+                <a href="{{ clinic.website }}" target="_blank" style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem; color: var(--primary); text-decoration: none;">
+                  🌐 Сайт
+                </a>
+              {% endif %}
+            </div>
+            <a href="{% url 'clinics:clinic_detail' clinic.pk %}" class="btn" style="width: 100%; padding: 10px; font-size: 0.95rem;">
+              Подробнее
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p style="text-align: center; color: var(--gray); font-style: italic;">
+      Клиник пока нет.
+      {% if user.is_authenticated and user.user_type == 'clinic_admin' %}
+        <a href="{% url 'clinics:clinic_add' %}" class="btn-link">Добавьте первую</a>.
+      {% endif %}
+    </p>
+  {% endif %}
+</div>
+
+<style>
+  .clinic-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.12);
+  }
+</style>
+{% endblock %}

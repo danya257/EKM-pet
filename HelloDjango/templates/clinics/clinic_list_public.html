@@ -1,0 +1,43 @@
+<!-- templates/clinics/clinic_list_public.html -->
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card" style="margin-bottom: 2rem;">
+  <h1>🏥 Ветеринарные клиники</h1>
+  
+  <!-- Поиск -->
+  <form method="get" style="margin-top: 1.5rem;">
+    <div class="input-group">
+      <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder=" " />
+      <label>Поиск по названию клиники или услуге</label>
+    </div>
+    <button type="submit" class="btn" style="padding: 8px 20px; font-size: 0.95rem;">Найти</button>
+  </form>
+</div>
+
+{% if clinics %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+    {% for clinic in clinics %}
+      <div class="card">
+        <h3>{{ clinic.name }}</h3>
+        <p>{{ clinic.address }}</p>
+        {% if clinic.services.exists %}
+          <p><strong>Услуги:</strong></p>
+          <ul style="font-size: 0.95rem; margin: 0.5rem 0;">
+            {% for service in clinic.services.all|slice:":3" %}
+              <li>{{ service.name }}</li>
+            {% endfor %}
+            {% if clinic.services.count > 3 %}
+              <li>+ ещё {{ clinic.services.count|add:"-3" }}</li>
+            {% endif %}
+          </ul>
+        {% endif %}
+        <a href="{% url 'clinics:clinic_detail_public' clinic.pk %}" class="btn">Подробнее</a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>Клиник по вашему запросу не найдено.</p>
+{% endif %}
+
+{% endblock %}

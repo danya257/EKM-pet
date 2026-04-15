@@ -1,0 +1,53 @@
+<!-- templates/users/register.html -->
+{% extends 'base.html' %}
+
+{% block title %}Регистрация — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="text-center mb-0">
+    <h1>Регистрация владельца 🐾</h1>
+    <p>Создайте аккаунт владельца питомца</p>
+  </div>
+
+  <form method="post" style="margin-top: 1.5rem;">
+    {% csrf_token %}
+
+    <div class="input-group">
+      {{ form.username }}
+      <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.first_name }}
+      <label for="{{ form.first_name.id_for_label }}">Имя</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.last_name }}
+      <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.email }}
+      <label for="{{ form.email.id_for_label }}">Email</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.password1 }}
+      <label for="{{ form.password1.id_for_label }}">Пароль</label>
+    </div>
+
+    <div class="input-group">
+      {{ form.password2 }}
+      <label for="{{ form.password2.id_for_label }}">Подтвердите пароль</label>
+    </div>
+
+    <button type="submit" class="btn" style="width: 100%;">Зарегистрироваться</button>
+  </form>
+
+  <div class="text-center mt-4">
+    <p class="mb-0">Уже есть аккаунт? <a href="{% url 'users:login_owner' %}" class="btn-link">Войти</a></p>
+  </div>
+</div>
+{% endblock %}

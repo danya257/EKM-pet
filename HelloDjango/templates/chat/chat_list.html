@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Мои чаты — EKM-PET{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h1>💬 Мои чаты</h1>
+  {% if chats %}
+    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
+      {% for chat in chats %}
+        <a href="{% url 'chat:chat_detail' chat.id %}" style="padding: 1.2rem; background: #f9fbfd; border-radius: var(--radius); text-decoration: none; color: var(--dark);">
+          <div style="display: flex; justify-content: space-between;">
+            <strong>
+              {% if user.user_type == 'owner' %}{{ chat.vet.get_full_name|default:chat.vet.username }} ({{ chat.clinic.name }})
+              {% else %}{{ chat.owner.get_full_name|default:chat.owner.username }}{% endif %}
+            </strong>
+            <span style="color: var(--gray); font-size: 0.9rem;">{{ chat.created_at|date:"d.m.Y" }}</span>
+          </div>
+          {% with last_msg=chat.messages.last %}
+            {% if last_msg %}
+              <div style="margin-top: 0.5rem; color: var(--gray); font-size: 0.95rem;">
+                {{ last_msg.sender.username }}: {{ last_msg.text|truncatechars:50 }}
+              </div>
+            {% endif %}
+          {% endwith %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>У вас пока нет чатов.</p>
+    <a href="{% url 'clinics:clinic_list_public' %}" class="btn" style="margin-top: 1rem;">Найти клинику</a>
+  {% endif %}
+</div>
+{% endblock %}

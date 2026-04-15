@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}400 — Некорректный запрос{% endblock %}
+{% block content %}
+<div class="card" style="text-align: center; padding: 3rem;">
+  <div style="font-size: 6rem; margin-bottom: 1.5rem;">⚠️</div>
+  <h1>400 — Некорректный запрос</h1>
+  <p style="font-size: 1.1rem; color: var(--gray); margin: 1.2rem 0;">
+    Ваш запрос не может быть обработан.<br>
+    Возможно, устарела ссылка или форма.
+  </p>
+  <a href="{% url 'blog:home' %}" class="btn" style="margin-top: 1.5rem;">Вернуться на главную</a>
+</div>
+{% endblock %}

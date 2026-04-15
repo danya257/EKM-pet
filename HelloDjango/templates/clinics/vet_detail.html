@@ -1,0 +1,29 @@
+<!-- templates/clinics/vet_detail.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="card">
+  <h1>👨‍⚕️ {{ vet.get_full_name|default:vet.username }}</h1>
+  
+  <div style="margin: 1.5rem 0;">
+    <label>Длительность приёма (минут):</label>
+    <input type="number" value="30" class="form-control" style="max-width: 200px;">
+    <button class="btn" style="margin-top: 0.5rem;">Сохранить</button>
+  </div>
+
+  <h3>Услуги и слоты</h3>
+  {% for assign in assignments %}
+    <div style="margin: 1rem 0; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+      <strong>{{ assign.service.name }}</strong> — {{ assign.service.price }} руб.
+      <div style="margin-top: 0.5rem; font-family: monospace;">
+        {% for slot in assign.available_slots %}
+          <div>{{ slot.date }}: {{ slot.times|join:", " }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  {% empty %}
+    <p>Нет назначенных услуг.</p>
+  {% endfor %}
+
+  <a href="{% url 'clinics:vet_list' %}" class="btn" style="margin-top: 2rem;">← Назад к ветеринарам</a>
+</div>
+{% endblock %}

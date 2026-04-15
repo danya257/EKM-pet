@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Услуги {{ clinic.name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Услуги клиники "{{ clinic.name }}"</h1>
+    <a href="{% url 'services:service_create' clinic.id %}" class="btn">+ Добавить услугу</a>
+  </div>
+
+  {% if services %}
+  <div style="margin-top: 1.5rem; display: grid; gap: 1rem;">
+    {% for service in services %}
+    <div style="padding: 1.2rem; background: #f9fbfd; border-radius: var(--radius);">
+      <h3>{{ service.name }}</h3>
+      <p><strong>Цена:</strong> {{ service.price }} руб.</p>
+      {% if service.description %}<p>{{ service.description }}</p>{% endif %}
+      <a href="{% url 'services:service_detail' clinic.id service.id %}" class="btn"
+        style="padding: 6px 12px; font-size: 0.9rem;">Управление</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="margin-top: 1.5rem;">Услуги ещё не добавлены.</p>
+  {% endif %}
+</div>
+{% endblock %}
