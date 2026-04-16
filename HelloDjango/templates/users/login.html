@@ -29,3 +29,28 @@
   </div>
 </div>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Добавляем placeholder для всех инпутов без него
+  document.querySelectorAll('.input-group input').forEach(input => {
+    if (!input.hasAttribute('placeholder')) {
+      input.setAttribute('placeholder', ' ');
+    }
+    // Для password полей добавляем специальный класс при изменении
+    if (input.type === 'password') {
+      input.addEventListener('input', () => {
+        if (input.value) {
+          input.classList.add('has-value');
+        } else {
+          input.classList.remove('has-value');
+        }
+      });
+      // Проверка при загрузке (если браузер автозаполнил)
+      if (input.value) {
+        input.classList.add('has-value');
+      }
+    }
+  });
+});
+</script>

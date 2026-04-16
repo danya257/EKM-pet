@@ -26,3 +26,25 @@
   </div>
 </div>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.input-group input').forEach(input => {
+    if (!input.hasAttribute('placeholder')) {
+      input.setAttribute('placeholder', ' ');
+    }
+    if (input.type === 'password') {
+      input.addEventListener('input', () => {
+        if (input.value) {
+          input.classList.add('has-value');
+        } else {
+          input.classList.remove('has-value');
+        }
+      });
+      if (input.value) {
+        input.classList.add('has-value');
+      }
+    }
+  });
+});
+</script>
