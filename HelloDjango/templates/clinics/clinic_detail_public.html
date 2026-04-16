@@ -57,10 +57,5 @@
       {{ clinic.reviews|linebreaks }}
     </div>
   {% endif %}
-
-  <!-- Кнопка чата (для владельцев) -->
-  {% if user.is_authenticated and user.user_type == 'owner' %}
-    <a href="{% url 'clinics:vet_list' %}" class="btn" style="margin-top: 1.5rem;">Написать ветеринару</a>
-  {% endif %}
 </div>
 {% endblock %}
