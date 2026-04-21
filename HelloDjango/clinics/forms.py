@@ -6,7 +6,7 @@ from users.models import User
 class ClinicForm(forms.ModelForm):
     class Meta:
         model = Clinic
-        fields = ['name', 'address', 'phone', 'email', 'website', 'description', 'admins']
+        fields = ['name', 'city', 'address', 'phone', 'email', 'website', 'description', 'admins']
         widgets = {
             'address': forms.Textarea(attrs={'rows': 3}),
             'description': forms.Textarea(attrs={'rows': 4}),

@@ -4,6 +4,7 @@ from users.models import User
 
 class Clinic(models.Model):
     name = models.CharField('Название клиники', max_length=200)
+    city = models.CharField('Город', max_length=100, blank=True, db_index=True)
     address = models.TextField('Адрес')
     phone = models.CharField('Телефон', max_length=20, blank=True)
     email = models.EmailField('Email', blank=True)

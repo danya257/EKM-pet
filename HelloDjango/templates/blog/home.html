@@ -24,9 +24,6 @@
 {% block content %}
 <div class="flex justify-between items-center mb-3">
   <h1>📰 Блог</h1>
-  {% if user.is_staff %}
-    <a href="{% url 'blog:article_create' %}" class="btn btn-sm btn-accent">+ Статья</a>
-  {% endif %}
 </div>
 
 {% for article in articles %}
