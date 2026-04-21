@@ -1,59 +1,140 @@
 {% extends 'base.html' %}
+{% block title %}EKM-PET — Ветеринарный паспорт{% endblock %}
 
-{% block title %}EKM-PET — Цифровой ветеринарный паспорт{% endblock %}
+{% block extra_head %}
+<style>
+  .hero {
+    background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+    border-radius: var(--radius);
+    padding: 40px 24px 36px;
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: rgba(255,255,255,.08);
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 220px; height: 220px;
+    background: rgba(255,255,255,.06);
+    border-radius: 50%;
+  }
+  .hero-emoji { font-size: 3.5rem; display: block; margin-bottom: 12px; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .hero h1 { color: white; font-size: 1.7rem; margin-bottom: 10px; }
+  .hero p  { color: rgba(255,255,255,.85); font-size: .95rem; margin-bottom: 24px; }
+  .hero-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-white { background: white; color: var(--primary); box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+  .btn-white:hover { background: #f0efff; color: var(--primary-dark); }
+  .btn-outline-white { background: transparent; border: 2px solid rgba(255,255,255,.6); color: white; box-shadow: none; }
+  .btn-outline-white:hover { background: rgba(255,255,255,.15); color: white; box-shadow: none; }
+
+  .feature-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .feature-item {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px;
+    border: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+    transition: box-shadow var(--transition), transform var(--transition);
+  }
+  .feature-item:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+  .feature-icon { font-size: 1.8rem; flex-shrink: 0; }
+  .feature-item h3 { font-size: .9rem; margin-bottom: 3px; }
+  .feature-item p  { font-size: .78rem; color: var(--text-muted); margin: 0; line-height: 1.45; }
+
+  .greeting-card {
+    background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    color: white;
+    margin-bottom: 20px;
+  }
+  .greeting-card h1 { color: white; font-size: 1.4rem; margin-bottom: 4px; }
+  .greeting-card p  { color: rgba(255,255,255,.8); font-size: .9rem; margin-bottom: 16px; }
+
+  @media (max-width: 480px) {
+    .feature-list { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.45rem; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="text-align: center; margin: 2rem auto; max-width: 700px;">
-    <div style="font-size: 4rem; margin-bottom: 1rem;">🐾</div>
-    <h1 style="font-size: 2.2rem; color: var(--primary-dark); margin-bottom: 1rem;">
-        EKM-PET — приложение для хранения информации о питомце
-    </h1>
-    <p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 2rem;">
-        Все медицинские данные вашего питомца — всегда под рукой
-    </p>
-
-    {% if user.is_authenticated %}
-    <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">
-        Здравствуйте, <strong>{{ user.get_full_name|default:user.username }}</strong>!
-    </p>
-    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-        <a href="{% url 'pets:pet_list' %}" class="btn">Мои питомцы</a>
-        <a href="{% url 'users:logout' %}" class="btn" style="background: #6c757d;">Выйти</a>
+{% if user.is_authenticated %}
+  <!-- Авторизован -->
+  <div class="greeting-card">
+    <h1>Привет, {{ user.first_name|default:user.username }}! 👋</h1>
+    <p>Все данные ваших питомцев в одном месте</p>
+    <div class="flex gap-1 flex-wrap">
+      <a href="{% url 'pets:pet_list' %}" class="btn btn-white btn-sm">🐾 Мои питомцы</a>
+      <a href="{% url 'pets:pet_add' %}" class="btn btn-outline-white btn-sm">+ Добавить питомца</a>
     </div>
-    {% else %}
-    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem;">
-        <a href="{% url 'users:login' %}" class="btn">Войти</a>
-        <a href="{% url 'users:register' %}" class="btn" style="background: var(--accent);">Регистрация</a>
-    </div>
-    {% endif %}
-</div>
+  </div>
 
-<div class="card" style="margin-top: 3rem;">
-    <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary-dark);">Возможности приложения</h2>
-    <ul style="list-style: none; padding: 0; max-width: 600px; margin: 0 auto;">
-        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
-            <span style="font-size: 1.4rem;">✅</span>
-            <span><strong>Электронная медицинская история</strong> — ведите записи прививок, анализов, диагнозов и
-                процедур.</span>
-        </li>
-        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
-            <span style="font-size: 1.4rem;">📱</span>
-            <span><strong>QR-паспорт питомца</strong> — всегда с вами, легко показать ветеринару или при
-                путешествиях.</span>
-        </li>
-        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
-            <span style="font-size: 1.4rem;">📎</span>
-            <span><strong>Прикрепление документов</strong> — загружайте справки о прививках, документы об операциях и
-                другие файлы.</span>
-        </li>
-        <li style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1.2rem;">
-            <span style="font-size: 1.4rem;">🔔</span>
-            <span><strong>Уведомления о событиях</strong> — напоминаем о предстоящих вакцинациях и визитах к врачу.</span>
-        </li>
-        <li style="display: flex; align-items: flex-start; gap: 12px;">
-            <span style="font-size: 1.4rem;">🏥</span>
-            <span><strong>Справочник клиник</strong> — найдите ближайшую ветеринарную клинику с отзывами и информацией о часах работы.</span>
-        </li>
-    </ul>
-</div>
+  <div class="feature-list">
+    <a href="{% url 'pets:pet_list' %}" class="feature-item" style="text-decoration:none;color:inherit">
+      <span class="feature-icon">🐾</span>
+      <div><h3>Питомцы</h3><p>Карточки и медкарты</p></div>
+    </a>
+    <a href="{% url 'clinics:clinic_list_public' %}" class="feature-item" style="text-decoration:none;color:inherit">
+      <span class="feature-icon">🏥</span>
+      <div><h3>Клиники</h3><p>Найти ветеринара</p></div>
+    </a>
+    <a href="{% url 'chat:chat_list' %}" class="feature-item" style="text-decoration:none;color:inherit">
+      <span class="feature-icon">💬</span>
+      <div><h3>Чаты</h3><p>Написать ветеринару</p></div>
+    </a>
+    <a href="{% url 'blog:home' %}" class="feature-item" style="text-decoration:none;color:inherit">
+      <span class="feature-icon">📰</span>
+      <div><h3>Блог</h3><p>Советы по уходу</p></div>
+    </a>
+  </div>
+
+{% else %}
+  <!-- Не авторизован -->
+  <div class="hero">
+    <span class="hero-emoji">🐾</span>
+    <h1>Цифровой паспорт для вашего питомца</h1>
+    <p>Храните прививки, анализы и документы. Делитесь QR-паспортом с ветеринаром за секунды.</p>
+    <div class="hero-btns">
+      <a href="{% url 'users:register' %}" class="btn btn-white btn-lg">Начать бесплатно</a>
+      <a href="{% url 'users:login' %}" class="btn btn-outline-white btn-lg">Войти</a>
+    </div>
+  </div>
+
+  <div class="feature-list">
+    <div class="feature-item">
+      <span class="feature-icon">📋</span>
+      <div><h3>Медкарта</h3><p>Вся история болезней, прививок и процедур</p></div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📎</span>
+      <div><h3>Документы</h3><p>Справки, анализы и рецепты всегда под рукой</p></div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">📱</span>
+      <div><h3>QR-паспорт</h3><p>Покажите ветеринару одним сканированием</p></div>
+    </div>
+    <div class="feature-item">
+      <span class="feature-icon">🏥</span>
+      <div><h3>Клиники</h3><p>Справочник ветеринарных клиник рядом</p></div>
+    </div>
+  </div>
+
+  <div class="card text-center">
+    <p class="text-muted text-sm mb-2">Уже есть аккаунт?</p>
+    <a href="{% url 'users:login' %}" class="btn btn-block">Войти в EKM-PET</a>
+  </div>
+{% endif %}
 {% endblock %}

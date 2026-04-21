@@ -1,43 +1,77 @@
-<!-- templates/clinics/clinic_list_public.html -->
 {% extends 'base.html' %}
-{% block content %}
+{% block title %}Клиники — EKM-PET{% endblock %}
 
-<div class="card" style="margin-bottom: 2rem;">
-  <h1>🏥 Ветеринарные клиники</h1>
-  
-  <!-- Поиск -->
-  <form method="get" style="margin-top: 1.5rem;">
-    <div class="input-group">
-      <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder=" " />
-      <label>Поиск по названию клиники или услуге</label>
-    </div>
-    <button type="submit" class="btn" style="padding: 8px 20px; font-size: 0.95rem;">Найти</button>
-  </form>
-</div>
+{% block extra_head %}
+<style>
+  .search-bar {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .search-bar input {
+    flex: 1; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 50px;
+    font-size: .9rem; font-family: inherit; outline: none;
+    transition: border-color var(--transition), box-shadow var(--transition);
+    background: var(--white);
+  }
+  .search-bar input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(108,99,255,.12);
+  }
+  .search-bar button { border-radius: 50px; padding: 11px 20px; }
+
+  .clinic-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: box-shadow var(--transition), transform var(--transition);
+  }
+  .clinic-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .clinic-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+  .clinic-addr { font-size: .85rem; color: var(--text-muted); margin-bottom: 10px; }
+  .clinic-services { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .service-tag {
+    font-size: .75rem; padding: 3px 10px;
+    background: var(--primary-bg); color: var(--primary-dark);
+    border-radius: 50px; font-weight: 500;
+  }
+  .service-tag.more { background: var(--gray-light); color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">🏥 Клиники</h1>
+
+<form method="get" class="search-bar">
+  <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Поиск по названию или услуге…">
+  <button type="submit" class="btn">Найти</button>
+</form>
 
 {% if clinics %}
-  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-    {% for clinic in clinics %}
-      <div class="card">
-        <h3>{{ clinic.name }}</h3>
-        <p>{{ clinic.address }}</p>
-        {% if clinic.services.exists %}
-          <p><strong>Услуги:</strong></p>
-          <ul style="font-size: 0.95rem; margin: 0.5rem 0;">
-            {% for service in clinic.services.all|slice:":3" %}
-              <li>{{ service.name }}</li>
-            {% endfor %}
-            {% if clinic.services.count > 3 %}
-              <li>+ ещё {{ clinic.services.count|add:"-3" }}</li>
-            {% endif %}
-          </ul>
-        {% endif %}
-        <a href="{% url 'clinics:clinic_detail_public' clinic.pk %}" class="btn">Подробнее</a>
-      </div>
-    {% endfor %}
-  </div>
+  {% for clinic in clinics %}
+    <div class="clinic-card">
+      <div class="clinic-name">{{ clinic.name }}</div>
+      <div class="clinic-addr">📍 {{ clinic.address }}</div>
+      {% if clinic.services.exists %}
+        <div class="clinic-services">
+          {% for service in clinic.services.all|slice:":4" %}
+            <span class="service-tag">{{ service.name }}</span>
+          {% endfor %}
+          {% if clinic.services.count > 4 %}
+            <span class="service-tag more">+{{ clinic.services.count|add:"-4" }} ещё</span>
+          {% endif %}
+        </div>
+      {% endif %}
+      <a href="{% url 'clinics:clinic_detail_public' clinic.pk %}" class="btn btn-sm">Подробнее →</a>
+    </div>
+  {% endfor %}
 {% else %}
-  <p>Клиник по вашему запросу не найдено.</p>
+  <div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:2.5rem;margin-bottom:12px">🏥</div>
+    <h3>Клиники не найдены</h3>
+    <p class="text-muted">Попробуйте изменить запрос</p>
+  </div>
 {% endif %}
-
 {% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Удалить питомца — EKM-PET{% endblock %}
+
+{% block content %}
+<div style="max-width:420px;margin:0 auto">
+  <div class="card text-center" style="padding:32px 20px">
+    <div style="font-size:3rem;margin-bottom:16px">⚠️</div>
+    <h2>Удалить {{ object.name }}?</h2>
+    <p class="text-muted">Все медицинские записи и документы питомца будут удалены без возможности восстановления.</p>
+    <form method="post" class="mt-3">
+      {% csrf_token %}
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-danger flex-1">Удалить</button>
+        <a href="{% url 'pets:pet_detail' object.pk %}" class="btn btn-gray flex-1">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

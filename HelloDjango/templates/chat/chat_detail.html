@@ -1,49 +1,134 @@
 {% extends 'base.html' %}
-{% block title %}Чат — {{ chat.vet.username }}{% endblock %}
+{% block title %}Чат — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .chat-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .chat-header-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; color: white; font-weight: 700; flex-shrink: 0;
+  }
+  .chat-header-name { font-weight: 700; font-size: .95rem; }
+  .chat-header-sub  { font-size: .78rem; color: var(--text-muted); }
+
+  .messages-wrap {
+    height: calc(100vh - 340px);
+    min-height: 240px;
+    overflow-y: auto;
+    padding: 12px;
+    background: var(--gray-light);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .msg-row { display: flex; }
+  .msg-row.mine { justify-content: flex-end; }
+  .msg-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: .88rem; line-height: 1.5;
+    word-break: break-word;
+  }
+  .msg-row.mine .msg-bubble {
+    background: var(--primary);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-row:not(.mine) .msg-bubble {
+    background: var(--white);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+  .msg-meta { font-size: .7rem; margin-top: 4px; opacity: .7; }
+  .msg-row.mine .msg-meta { text-align: right; }
+
+  .chat-input-wrap {
+    display: flex; gap: 8px; align-items: flex-end;
+  }
+  .chat-input-wrap textarea {
+    flex: 1; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 20px;
+    font-size: .9rem; font-family: inherit; resize: none;
+    outline: none; max-height: 120px; overflow-y: auto;
+    transition: border-color var(--transition);
+    background: var(--white);
+  }
+  .chat-input-wrap textarea:focus { border-color: var(--primary); }
+  .send-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--primary); color: white; border: none;
+    font-size: 1.1rem; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background var(--transition), transform var(--transition);
+  }
+  .send-btn:hover { background: var(--primary-dark); transform: scale(1.05); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h1>
-      💬 Чат с 
-      {% if user == chat.owner %}
-        {{ chat.vet.get_full_name|default:chat.vet.username }} ({{ chat.clinic.name }})
-      {% else %}
-        {{ chat.owner.get_full_name|default:chat.owner.username }}
-      {% endif %}
-    </h1>
-    <a href="{% url 'chat:chat_list' %}" class="btn" style="background: #6c757d; padding: 6px 12px; font-size: 0.9rem;">← Все чаты</a>
+<div class="flex items-center gap-2 mb-2">
+  <a href="{% url 'chat:chat_list' %}" class="icon-btn">←</a>
+  <div class="chat-header-name">
+    {% if user == chat.owner %}
+      {{ chat.vet.get_full_name|default:chat.vet.username }}
+    {% else %}
+      {{ chat.owner.get_full_name|default:chat.owner.username }}
+    {% endif %}
   </div>
-
-  <div style="height: 400px; overflow-y: auto; border: 1px solid #e1e5eb; border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem; background: #fcfdff;">
-    {% for msg in messages %}
-      <div style="margin-bottom: 1rem;">
-        <div style="font-weight: 600; color: {% if msg.sender == user %}var(--primary){% else %}var(--gray){% endif %};">
-          {{ msg.sender.get_full_name|default:msg.sender.username }} 
-          <span style="font-weight: normal; font-size: 0.85rem; color: #999;">{{ msg.timestamp|date:"H:i" }}</span>
-        </div>
-        <div style="margin-top: 0.3rem;">{{ msg.text|linebreaks }}</div>
-      </div>
-    {% empty %}
-      <p style="color: var(--gray); text-align: center;">Чат пуст. Напишите первое сообщение!</p>
-    {% endfor %}
-  </div>
-
-  <form method="post">
-    {% csrf_token %}
-    <div class="input-group">
-      <textarea name="text" placeholder="Введите сообщение..." style="min-height: 80px; resize: vertical;" required></textarea>
-      <label for="id_text">Сообщение</label>
-    </div>
-    <button type="submit" class="btn">Отправить</button>
-  </form>
 </div>
 
+<div class="messages-wrap" id="msgWrap">
+  {% for msg in messages %}
+    <div class="msg-row {% if msg.sender == user %}mine{% endif %}">
+      <div>
+        <div class="msg-bubble">{{ msg.text|linebreaksbr }}</div>
+        <div class="msg-meta">{{ msg.timestamp|date:"H:i" }}</div>
+      </div>
+    </div>
+  {% empty %}
+    <div style="text-align:center;color:var(--text-muted);font-size:.85rem;margin:auto">
+      Напишите первое сообщение 👋
+    </div>
+  {% endfor %}
+</div>
+
+<form method="post" class="chat-input-wrap">
+  {% csrf_token %}
+  <textarea name="text" id="msgInput" placeholder="Сообщение…" rows="1" required></textarea>
+  <button type="submit" class="send-btn" aria-label="Отправить">➤</button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-  // Автопрокрутка вниз
-  const chatBox = document.querySelector('div[style*="height: 400px"]');
-  if (chatBox) {
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+// Автопрокрутка вниз
+const wrap = document.getElementById('msgWrap');
+if (wrap) wrap.scrollTop = wrap.scrollHeight;
+
+// Авторесайз textarea
+const ta = document.getElementById('msgInput');
+if (ta) {
+  ta.addEventListener('input', () => {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px';
+  });
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      ta.closest('form').submit();
+    }
+  });
+}
 </script>
 {% endblock %}

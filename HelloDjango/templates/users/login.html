@@ -1,58 +1,270 @@
-<!-- templates/users/login.html -->
 {% extends 'base.html' %}
+{% block title %}Вход — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-wrap {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .auth-logo {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .auth-logo .paw { font-size: 3rem; display: block; margin-bottom: 8px; }
+  .auth-logo h1  { font-size: 1.5rem; margin-bottom: 4px; }
+  .auth-logo p   { color: var(--text-muted); font-size: .9rem; }
+
+  /* PIN-экран */
+  .pin-screen { display: none; }
+  .pin-screen.visible { display: block; }
+  .pin-user-info {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--gray-light);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .pin-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: white; font-weight: 700; flex-shrink: 0;
+  }
+  .pin-dots {
+    display: flex; justify-content: center; gap: 14px;
+    margin: 24px 0 20px;
+  }
+  .pin-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border);
+    background: transparent;
+    transition: all .15s ease;
+  }
+  .pin-dot.filled { background: var(--primary); border-color: var(--primary); transform: scale(1.1); }
+  .pin-dot.error  { background: var(--danger); border-color: var(--danger); animation: shake .3s ease; }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)}
+  }
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 280px;
+    margin: 0 auto 20px;
+  }
+  .pin-key {
+    height: 64px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-size: 1.4rem; font-weight: 600; font-family: inherit;
+    cursor: pointer;
+    transition: all .12s ease;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .pin-key:hover  { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
+  .pin-key:active { transform: scale(.94); background: var(--primary); color: white; border-color: var(--primary); }
+  .pin-key.del    { font-size: 1.1rem; color: var(--text-muted); }
+  .pin-key.empty  { border: none; background: transparent; cursor: default; }
+  .pin-key.empty:hover { background: transparent; }
+
+  .divider-text {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--text-muted); font-size: .82rem; margin: 16px 0;
+  }
+  .divider-text::before, .divider-text::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card">
-  <div class="text-center mb-0">
-    <h1>👋 Добро пожаловать!</h1>
-    <p>Войдите в свой аккаунт</p>
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <span class="paw">🐾</span>
+    <h1>Добро пожаловать</h1>
+    <p>Войдите в свой аккаунт EKM-PET</p>
   </div>
 
-  <form method="post" style="margin-top: 1.5rem;">
-    {% csrf_token %}
-
-    <div class="input-group">
-      {{ form.username }}
-      <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+  <!-- PIN-экран (показывается если есть сохранённый пользователь) -->
+  <div class="pin-screen card" id="pinScreen">
+    <div class="pin-user-info">
+      <div class="pin-avatar" id="pinAvatar">?</div>
+      <div>
+        <div class="fw-600" id="pinUsername">—</div>
+        <div class="text-xs text-muted">Введите PIN для входа</div>
+      </div>
     </div>
-
-    <div class="input-group">
-      {{ form.password }}
-      <label for="{{ form.password.id_for_label }}">Пароль</label>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
     </div>
+    <div class="pin-pad">
+      <button class="pin-key" data-n="1">1</button>
+      <button class="pin-key" data-n="2">2</button>
+      <button class="pin-key" data-n="3">3</button>
+      <button class="pin-key" data-n="4">4</button>
+      <button class="pin-key" data-n="5">5</button>
+      <button class="pin-key" data-n="6">6</button>
+      <button class="pin-key" data-n="7">7</button>
+      <button class="pin-key" data-n="8">8</button>
+      <button class="pin-key" data-n="9">9</button>
+      <button class="pin-key empty"></button>
+      <button class="pin-key" data-n="0">0</button>
+      <button class="pin-key del" id="pinDel">⌫</button>
+    </div>
+    <div id="pinError" class="text-center text-danger text-sm mb-2" style="display:none;min-height:20px"></div>
+    <button class="btn btn-ghost btn-block btn-sm" id="switchToPassword">Войти по паролю</button>
+  </div>
 
-    <button type="submit" class="btn" style="width: 100%;">Войти</span></button>
-  </form>
+  <!-- Форма логина -->
+  <div class="card" id="loginForm">
+    <form method="post" id="loginFormEl">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
 
-  <div class="text-center mt-4">
-    <p class="mb-0">Нет аккаунта? <a href="{% url 'users:register' %}" class="btn-link">Зарегистрироваться</a></p>
+      <div class="field">
+        <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+        {{ form.username }}
+      </div>
+      <div class="field">
+        <label for="{{ form.password.id_for_label }}">Пароль</label>
+        <div style="position:relative">
+          {{ form.password }}
+          <button type="button" id="togglePwd" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-muted)">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-block mt-2">Войти</button>
+    </form>
+
+    <div class="divider-text mt-3">или</div>
+    <div class="text-center">
+      <p class="text-muted text-sm mb-2">Нет аккаунта?</p>
+      <a href="{% url 'users:register' %}" class="btn btn-ghost btn-block">Зарегистрироваться</a>
+    </div>
   </div>
 </div>
 {% endblock %}
 
+{% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.input-group input').forEach(input => {
-    // Сохраняем оригинальный placeholder в data-атрибут
-    const originalPlaceholder = input.getAttribute('placeholder') || '';
-    input.setAttribute('data-placeholder', originalPlaceholder);
-    
-    // Функция обновления placeholder
-    const updatePlaceholder = () => {
-      if (input.value.length > 0 || document.activeElement === input) {
-        input.setAttribute('placeholder', '');
+(function() {
+  const STORAGE_KEY = 'ekm_pin_user';
+  const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+
+  const pinScreen   = document.getElementById('pinScreen');
+  const loginForm   = document.getElementById('loginForm');
+  const pinUsername = document.getElementById('pinUsername');
+  const pinAvatar   = document.getElementById('pinAvatar');
+  const pinError    = document.getElementById('pinError');
+  const dots        = [0,1,2,3].map(i => document.getElementById('d'+i));
+
+  let pinValue = '';
+
+  function showPin() {
+    pinScreen.classList.add('visible');
+    loginForm.style.display = 'none';
+    pinUsername.textContent = saved.username;
+    pinAvatar.textContent   = (saved.display || saved.username)[0].toUpperCase();
+  }
+
+  function showLogin() {
+    pinScreen.classList.remove('visible');
+    loginForm.style.display = '';
+  }
+
+  if (saved && saved.username) showPin();
+
+  function updateDots() {
+    dots.forEach((d, i) => {
+      d.classList.toggle('filled', i < pinValue.length);
+      d.classList.remove('error');
+    });
+  }
+
+  function shakeError(msg) {
+    dots.forEach(d => d.classList.add('error'));
+    pinError.textContent = msg;
+    pinError.style.display = 'block';
+    setTimeout(() => {
+      dots.forEach(d => d.classList.remove('error'));
+      pinError.style.display = 'none';
+    }, 1200);
+    pinValue = '';
+    updateDots();
+  }
+
+  async function submitPin() {
+    try {
+      const res = await fetch('{% url "users:pin_login" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body: JSON.stringify({ pin: pinValue, username: saved.username })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        window.location.href = data.redirect;
       } else {
-        input.setAttribute('placeholder', originalPlaceholder);
+        shakeError(data.error || 'Неверный PIN');
       }
-    };
-    
-    // Слушаем события
-    input.addEventListener('input', updatePlaceholder);
-    input.addEventListener('focus', updatePlaceholder);
-    input.addEventListener('blur', updatePlaceholder);
-    
-    // Проверяем при загрузке (автозаполнение)
-    setTimeout(updatePlaceholder, 100);
+    } catch(e) {
+      shakeError('Ошибка соединения');
+    }
+  }
+
+  document.querySelectorAll('.pin-key[data-n]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (pinValue.length >= 4) return;
+      pinValue += btn.dataset.n;
+      updateDots();
+      if (pinValue.length === 4) setTimeout(submitPin, 120);
+    });
   });
-});
+
+  document.getElementById('pinDel').addEventListener('click', () => {
+    pinValue = pinValue.slice(0, -1);
+    updateDots();
+  });
+
+  document.getElementById('switchToPassword').addEventListener('click', () => {
+    showLogin();
+  });
+
+  // Показать/скрыть пароль
+  const togglePwd = document.getElementById('togglePwd');
+  const pwdField  = document.querySelector('input[type="password"]');
+  if (togglePwd && pwdField) {
+    togglePwd.addEventListener('click', () => {
+      const isText = pwdField.type === 'text';
+      pwdField.type = isText ? 'password' : 'text';
+      togglePwd.textContent = isText ? '👁' : '🙈';
+    });
+  }
+
+  // Клавиатура для PIN
+  document.addEventListener('keydown', e => {
+    if (!pinScreen.classList.contains('visible')) return;
+    if (e.key >= '0' && e.key <= '9' && pinValue.length < 4) {
+      pinValue += e.key;
+      updateDots();
+      if (pinValue.length === 4) setTimeout(submitPin, 120);
+    }
+    if (e.key === 'Backspace') {
+      pinValue = pinValue.slice(0, -1);
+      updateDots();
+    }
+  });
+
+  function getCsrf() {
+    return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1] || '';
+  }
+})();
 </script>
+{% endblock %}
