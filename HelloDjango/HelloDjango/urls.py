@@ -25,3 +25,10 @@ handler500 = 'django.views.defaults.server_error'
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # На продакшене (Beget) всегда добавляем маршруты для медиа
+    # так как файлы будут в public_html/media и доступны через Nginx
+    from django.views.static import serve
+    urlpatterns += [
+        path('media/<path:path>', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]
