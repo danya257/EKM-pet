@@ -179,9 +179,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Медиа-файлы (загруженные пользователями)
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# Для раздачи медиа на продакшене лучше настроить Nginx в панели Beget,
-# но для начала можно оставить так.
+# На хостинге Beget медиа-файлы должны быть в public_html/media
+MEDIA_ROOT = '/home/k/kimdanrf/kimdanrf.beget.tech/public_html/media'
 
 # =============================================================================
 # DEFAULT SETTINGS
