@@ -115,6 +115,10 @@ DATABASES = {
     }
 }
 
+# Используем pymysql как замену mysqlclient
+import pymysql
+pymysql.install_as_MySQLdb()
+
 # =============================================================================
 # REST FRAMEWORK SETTINGS
 # =============================================================================
@@ -175,8 +179,9 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Медиа-файлы (загруженные пользователями)
 MEDIA_URL = '/media/'
-# На Beget медиа должны быть в public_html/media для доступа через Nginx
-MEDIA_ROOT = '/home/k/kimdanrf/kimdanrf.beget.tech/public_html/media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Для раздачи медиа на продакшене лучше настроить Nginx в панели Beget,
+# но для начала можно оставить так.
 
 # =============================================================================
 # DEFAULT SETTINGS

@@ -267,9 +267,23 @@ class PublicClinicListView(ListView):
     def get_queryset(self):
         queryset = Clinic.objects.all()
         q = self.request.GET.get('q')
+        city = self.request.GET.get('city')
         if q:
             queryset = queryset.filter(
                 Q(name__icontains=q) |
                 Q(services__name__icontains=q)
             ).distinct()
-        return queryset.order_by('name')    
+        if city:
+            queryset = queryset.filter(city__iexact=city)
+        return queryset.order_by('name')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['cities'] = (
+            Clinic.objects.exclude(city='')
+            .values_list('city', flat=True)
+            .distinct()
+            .order_by('city')
+        )
+        ctx['selected_city'] = self.request.GET.get('city', '')
+        return ctx

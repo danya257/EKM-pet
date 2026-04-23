@@ -1,53 +1,100 @@
-<!-- templates/users/register.html -->
 {% extends 'base.html' %}
-
 {% block title %}Регистрация — EKM-PET{% endblock %}
 
+{% block extra_head %}
+<style>
+  .auth-wrap { max-width: 420px; margin: 0 auto; }
+  .auth-logo { text-align: center; margin-bottom: 24px; }
+  .auth-logo .paw { font-size: 3rem; display: block; margin-bottom: 8px; }
+  .auth-logo h1 { font-size: 1.5rem; margin-bottom: 4px; }
+  .auth-logo p  { color: var(--text-muted); font-size: .9rem; }
+  .form-errors { margin-bottom: 12px; }
+  .form-errors li { color: var(--danger); font-size: .82rem; margin-bottom: 3px; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card">
-  <div class="text-center mb-0">
-    <h1>Регистрация владельца 🐾</h1>
-    <p>Создайте аккаунт владельца питомца</p>
+<div class="auth-wrap">
+  <div class="auth-logo">
+    <span class="paw">🐾</span>
+    <h1>Создать аккаунт</h1>
+    <p>Зарегистрируйтесь как владелец питомца</p>
   </div>
 
-  <form method="post" style="margin-top: 1.5rem;">
-    {% csrf_token %}
+  <div class="card">
+    <form method="post">
+      {% csrf_token %}
 
-    <div class="input-group">
-      {{ form.username }}
-      <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+      {% if form.non_field_errors %}
+        <div class="alert alert-error">{{ form.non_field_errors.0 }}</div>
+      {% endif %}
+
+      <div class="field">
+        <label for="{{ form.username.id_for_label }}">Имя пользователя</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <ul class="form-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="grid-2">
+        <div class="field">
+          <label for="{{ form.first_name.id_for_label }}">Имя</label>
+          {{ form.first_name }}
+        </div>
+        <div class="field">
+          <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+          {{ form.last_name }}
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.password1.id_for_label }}">Пароль</label>
+        <div style="position:relative">
+          {{ form.password1 }}
+          <button type="button" class="toggle-pwd" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-muted)">👁</button>
+        </div>
+        {% if form.password1.errors %}
+          <ul class="form-errors">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.password2.id_for_label }}">Повторите пароль</label>
+        <div style="position:relative">
+          {{ form.password2 }}
+          <button type="button" class="toggle-pwd" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--text-muted)">👁</button>
+        </div>
+        {% if form.password2.errors %}
+          <ul class="form-errors">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn btn-block mt-2">Зарегистрироваться</button>
+    </form>
+
+    <div class="text-center mt-3">
+      <p class="text-muted text-sm">Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a></p>
     </div>
-
-    <div class="input-group">
-      {{ form.first_name }}
-      <label for="{{ form.first_name.id_for_label }}">Имя</label>
-    </div>
-
-    <div class="input-group">
-      {{ form.last_name }}
-      <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
-    </div>
-
-    <div class="input-group">
-      {{ form.email }}
-      <label for="{{ form.email.id_for_label }}">Email</label>
-    </div>
-
-    <div class="input-group">
-      {{ form.password1 }}
-      <label for="{{ form.password1.id_for_label }}">Пароль</label>
-    </div>
-
-    <div class="input-group">
-      {{ form.password2 }}
-      <label for="{{ form.password2.id_for_label }}">Подтвердите пароль</label>
-    </div>
-
-    <button type="submit" class="btn" style="width: 100%;">Зарегистрироваться</button>
-  </form>
-
-  <div class="text-center mt-4">
-    <p class="mb-0">Уже есть аккаунт? <a href="{% url 'users:login_owner' %}" class="btn-link">Войти</a></p>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.toggle-pwd').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const field = btn.previousElementSibling;
+    if (!field) return;
+    const isText = field.type === 'text';
+    field.type = isText ? 'password' : 'text';
+    btn.textContent = isText ? '👁' : '🙈';
+  });
+});
+</script>
 {% endblock %}

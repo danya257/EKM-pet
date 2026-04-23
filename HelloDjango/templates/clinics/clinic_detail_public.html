@@ -1,48 +1,92 @@
-<!-- templates/clinics/clinic_detail_public.html -->
 {% extends 'base.html' %}
+{% block title %}{{ clinic.name }} — EKM-PET{% endblock %}
+
 {% block content %}
-<div class="card">
-  <h1>{{ clinic.name }}</h1>
-  <p><strong>📍 Адрес:</strong> {{ clinic.address }}</p>
-  {% if clinic.phone %}<p><strong>📞 Телефон:</strong> {{ clinic.phone }}</p>{% endif %}
-  {% if clinic.email %}<p><strong>✉️ Email:</strong> {{ clinic.email }}</p>{% endif %}
-  {% if clinic.website %}
-    <p><strong>🌐 Сайт:</strong> <a href="{{ clinic.website }}" target="_blank">{{ clinic.website }}</a></p>
-  {% endif %}
-  {% if clinic.description %}
-    <p><strong>📋 Описание:</strong></p>
-    <p>{{ clinic.description|linebreaks }}</p>
-  {% endif %}
-
-  <!-- Услуги -->
-  <h2 style="margin-top: 1.5rem;">Услуги</h2>
-  {% if clinic.services.all %}
-    <ul style="margin-bottom: 1.5rem;">
-      {% for service in clinic.services.all %}
-        <li>{{ service.name }} — {{ service.price }} руб.</li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p style="margin-bottom: 1.5rem;">Услуги пока не добавлены.</p>
-  {% endif %}
-
-  <!-- Часы работы (если есть) -->
-  {% if clinic.working_hours %}
-    <h2 style="margin-top: 1.5rem;">Часы работы</h2>
-    <p style="margin-bottom: 1.5rem;">{{ clinic.working_hours|linebreaks }}</p>
-  {% endif %}
-
-  <!-- Отзывы (если есть) -->
-  {% if clinic.reviews %}
-    <h2 style="margin-top: 1.5rem;">Отзывы</h2>
-    <div style="margin-bottom: 1.5rem;">
-      {{ clinic.reviews|linebreaks }}
-    </div>
-  {% endif %}
-
-  <!-- Кнопка чата (для владельцев) -->
-  {% if user.is_authenticated and user.user_type == 'owner' %}
-    <a href="{% url 'clinics:vet_list' %}" class="btn" style="margin-top: 1.5rem;">Написать ветеринару</a>
-  {% endif %}
+<div class="flex items-center gap-2 mb-3">
+  <a href="{% url 'clinics:clinic_list_public' %}" class="icon-btn">←</a>
+  <h1 class="mb-0">{{ clinic.name }}</h1>
 </div>
+
+<div class="card">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div class="flex items-center gap-2">
+      <span style="font-size:1.2rem">📍</span>
+      <span>{{ clinic.address }}</span>
+    </div>
+    {% if clinic.phone %}
+    <div class="flex items-center gap-2">
+      <span style="font-size:1.2rem">📞</span>
+      <a href="tel:{{ clinic.phone }}">{{ clinic.phone }}</a>
+    </div>
+    {% endif %}
+    {% if clinic.email %}
+    <div class="flex items-center gap-2">
+      <span style="font-size:1.2rem">✉️</span>
+      <a href="mailto:{{ clinic.email }}">{{ clinic.email }}</a>
+    </div>
+    {% endif %}
+    {% if clinic.website %}
+    <div class="flex items-center gap-2">
+      <span style="font-size:1.2rem">🌐</span>
+      <a href="{{ clinic.website }}" target="_blank" rel="noopener">{{ clinic.website }}</a>
+    </div>
+    {% endif %}
+    {% if clinic.rating > 0 %}
+    <div class="flex items-center gap-2">
+      <span style="font-size:1.2rem">⭐</span>
+      <span>{{ clinic.rating }} / 5</span>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if clinic.description %}
+<div class="card">
+  <h2>О клинике</h2>
+  <p>{{ clinic.description|linebreaks }}</p>
+</div>
+{% endif %}
+
+{% if clinic.services.all %}
+<div class="card">
+  <h2>Услуги</h2>
+  {% for service in clinic.services.all %}
+    <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--border)">
+      <span>{{ service.name }}</span>
+      <span class="badge badge-primary">{{ service.price }} ₽</span>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if clinic.working_hours %}
+<div class="card">
+  <h2>Часы работы</h2>
+  <p>{{ clinic.working_hours|linebreaks }}</p>
+</div>
+{% endif %}
+
+{% if clinic.yandex_maps_id %}
+<div class="card" style="padding:0;overflow:hidden">
+  <div style="width:100%;height:360px;position:relative">
+    <iframe style="width:100%;height:100%;border:none"
+      src="https://yandex.ru/maps-reviews-widget/{{ clinic.yandex_maps_id }}?comments"></iframe>
+  </div>
+</div>
+{% endif %}
+
+{% if user.is_authenticated and user.user_type == 'owner' %}
+<div class="card">
+  <h2>Написать ветеринару</h2>
+  <div class="flex gap-2 flex-wrap">
+    {% for vet in clinic.admins.all %}
+      {% if vet.user_type in 'vet,clinic_admin' %}
+        <a href="{% url 'chat:start_chat' clinic.id vet.id %}" class="btn btn-sm">
+          💬 {{ vet.get_full_name|default:vet.username }}
+        </a>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}Загрузить документ — {{ pet.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 32px 20px;
+    text-align: center;
+    background: var(--gray-light);
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-bottom: 16px;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--primary);
+    background: var(--primary-bg);
+  }
+  .upload-zone .upload-icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+  .upload-zone p { color: var(--text-muted); font-size: .88rem; margin: 0; }
+  .upload-zone input[type="file"] {
+    position: absolute; opacity: 0; width: 0; height: 0;
+  }
+  .file-preview {
+    display: none;
+    align-items: center; gap: 12px;
+    background: var(--primary-bg);
+    border: 1.5px solid rgba(108,99,255,.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+  }
+  .file-preview.visible { display: flex; }
+  .file-preview-icon { font-size: 1.8rem; }
+  .file-preview-name { font-weight: 600; font-size: .88rem; flex: 1; word-break: break-all; }
+  .file-preview-size { font-size: .75rem; color: var(--text-muted); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:480px;margin:0 auto">
+  <div class="flex items-center gap-2 mb-3">
+    <a href="{% url 'pets:pet_detail' pet.pk %}" class="icon-btn">←</a>
+    <div>
+      <h1 class="mb-0">Загрузить документ</h1>
+      <p class="text-muted text-sm mb-0">для {{ pet.name }}</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <form method="post" enctype="multipart/form-data" id="docForm">
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="{{ form.category.id_for_label }}">Категория</label>
+        {{ form.category }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.title.id_for_label }}">Название документа</label>
+        {{ form.title }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.date.id_for_label }}">Дата документа <span class="text-muted">(необязательно)</span></label>
+        {{ form.date }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.description.id_for_label }}">Описание <span class="text-muted">(необязательно)</span></label>
+        {{ form.description }}
+      </div>
+
+      <!-- Зона загрузки файла -->
+      <div class="field">
+        <label>Файл</label>
+        <label class="upload-zone" id="uploadZone" for="{{ form.file.id_for_label }}">
+          <span class="upload-icon">📎</span>
+          <p><strong>Нажмите для выбора</strong> или перетащите файл</p>
+          <p style="margin-top:4px">PDF, JPG, PNG — до 10 МБ</p>
+          {{ form.file }}
+        </label>
+        <div class="file-preview" id="filePreview">
+          <span class="file-preview-icon" id="previewIcon">📄</span>
+          <div>
+            <div class="file-preview-name" id="previewName"></div>
+            <div class="file-preview-size" id="previewSize"></div>
+          </div>
+          <button type="button" id="clearFile" class="btn btn-danger btn-sm">✕</button>
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-3">
+        <button type="submit" class="btn flex-1">Загрузить</button>
+        <a href="{% url 'pets:pet_detail' pet.pk %}#documents" class="btn btn-gray flex-1">Отмена</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+const zone      = document.getElementById('uploadZone');
+const preview   = document.getElementById('filePreview');
+const prevName  = document.getElementById('previewName');
+const prevSize  = document.getElementById('previewSize');
+const prevIcon  = document.getElementById('previewIcon');
+const clearBtn  = document.getElementById('clearFile');
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' Б';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' КБ';
+  return (bytes/1024/1024).toFixed(1) + ' МБ';
+}
+
+function showPreview(file) {
+  prevName.textContent = file.name;
+  prevSize.textContent = formatSize(file.size);
+  const ext = file.name.split('.').pop().toLowerCase();
+  prevIcon.textContent = ext === 'pdf' ? '📄' : ['jpg','jpeg','png','gif','webp'].includes(ext) ? '🖼' : '📎';
+  preview.classList.add('visible');
+  zone.style.display = 'none';
+}
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) showPreview(fileInput.files[0]);
+});
+
+clearBtn.addEventListener('click', () => {
+  fileInput.value = '';
+  preview.classList.remove('visible');
+  zone.style.display = '';
+});
+
+// Drag & drop
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    showPreview(file);
+  }
+});
+</script>
+{% endblock %}

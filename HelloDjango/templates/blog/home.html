@@ -1,56 +1,51 @@
-<!-- templates/blog/home.html -->
 {% extends 'base.html' %}
-{% block title %}EKM-PET — Блог о здоровье питомцев{% endblock %}
+{% block title %}Блог — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .article-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    margin-bottom: 12px;
+    transition: box-shadow var(--transition), transform var(--transition);
+  }
+  .article-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .article-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 5px; }
+  .article-title a { color: var(--text); }
+  .article-title a:hover { color: var(--primary); text-decoration: none; }
+  .article-meta { font-size: .78rem; color: var(--text-muted); margin-bottom: 10px; }
+  .article-excerpt { font-size: .88rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 12px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card">
-  <h1>📰 Блог о животных</h1>
-  <p>Полезные статьи о здоровье, уходе и воспитании ваших питомцев.</p>
-  
-  {% if user.is_staff %}
-    <a href="{% url 'blog:article_create' %}" class="btn" style="background: #28a745; margin-top: 1rem;">+ Новая статья</a>
-  {% endif %}
+<div class="flex justify-between items-center mb-3">
+  <h1>📰 Блог</h1>
 </div>
 
-<div style="display: grid; gap: 1.8rem; margin-top: 2rem;">
-  {% for article in articles %}
-    <div class="card" style="padding: 1.8rem;">
-      <h2>
-        <a href="{% url 'blog:article_detail' article.slug %}" 
-           style="color: var(--primary-dark); text-decoration: none;">
-          {{ article.title }}
-        </a>
-      </h2>
-      
-      <p style="color: var: (--gray); font-size: 0.95rem; margin: 0.6rem 0;">
-        Автор: {{ article.author.get_full_name|default:article.author.username|default:"Администрация EKM-PET" }} 
-        | {{ article.published_at|date:"d.m.Y" }}
-      </p>
-      
-      <p style="margin: 1rem 0;">{{ article.content|truncatewords:40 }}</p>
-      
-      <a href="{% url 'blog:article_detail' article.slug %}" 
-         class="btn" 
-         style="background: var(--primary); padding: 8px 16px; font-size: 0.95rem; margin-top: 1rem;">
-        Читать далее
-      </a>
+{% for article in articles %}
+  <div class="article-card">
+    <div class="article-title">
+      <a href="{% url 'blog:article_detail' article.slug %}">{{ article.title }}</a>
     </div>
-  {% empty %}
-    <div class="card" style="text-align: center; padding: 2.5rem;">
-      <p style="font-size: 1.1rem; color: var(--gray);">
-        Статьи скоро появятся!
-      </p>
-      {% if user.is_staff %}
-        <a href="{% url 'blog:article_create' %}" class="btn" style="margin-top: 1.5rem;">Написать первую статью</a>
-      {% endif %}
+    <div class="article-meta">
+      {{ article.author.get_full_name|default:article.author.username|default:"Редакция EKM-PET" }}
+      · {{ article.published_at|date:"d.m.Y" }}
     </div>
-  {% endfor %}
-</div>
-
-<!-- Каталог клиник -->
-<div class="card" style="margin-top: 2.5rem;">
-  <h2 style="margin-bottom: 1rem;">🏥 Ветеринарные клиники рядом</h2>
-  <p>Найдите проверенную клинику для вашего питомца.</p>
-  <a href="{% url 'clinics:clinic_list_public' %}" class="btn" style="margin-top: 1rem;">Смотреть все клиники</a>
-</div>
+    <div class="article-excerpt">{{ article.content|truncatewords:30 }}</div>
+    <a href="{% url 'blog:article_detail' article.slug %}" class="btn btn-ghost btn-sm">Читать →</a>
+  </div>
+{% empty %}
+  <div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:2.5rem;margin-bottom:12px">📰</div>
+    <h3>Статьи скоро появятся</h3>
+    <p class="text-muted">Следите за обновлениями</p>
+    {% if user.is_staff %}
+      <a href="{% url 'blog:article_create' %}" class="btn mt-3">Написать первую статью</a>
+    {% endif %}
+  </div>
+{% endfor %}
 {% endblock %}

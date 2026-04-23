@@ -4,7 +4,8 @@ from .models import Clinic
 
 @admin.register(Clinic)
 class ClinicAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'phone', 'email', 'created_at')
-    search_fields = ('name', 'address', 'phone', 'email')
-    filter_horizontal = ('admins',)  # удобный виджет для ManyToMany
+    list_display = ('name', 'city', 'address', 'phone', 'email', 'created_at')
+    list_filter = ('city',)
+    search_fields = ('name', 'city', 'address', 'phone', 'email')
+    filter_horizontal = ('admins',)
     readonly_fields = ('created_at',)

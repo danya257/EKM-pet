@@ -1,79 +1,265 @@
 {% extends 'base.html' %}
 {% load pet_tags %}
-
 {% block title %}{{ pet.name }} — EKM-PET{% endblock %}
 
+{% block extra_head %}
+<style>
+  .pet-hero {
+    background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    color: white;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .pet-hero-avatar {
+    width: 68px; height: 68px; border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,.35);
+  }
+  .pet-hero-info h1 { color: white; font-size: 1.4rem; margin-bottom: 3px; }
+  .pet-hero-info p  { color: rgba(255,255,255,.8); font-size: .85rem; margin: 0; }
+  .pet-hero-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-white-sm {
+    background: rgba(255,255,255,.2); color: white; border: 1.5px solid rgba(255,255,255,.4);
+    padding: 7px 14px; border-radius: 50px; font-size: .82rem; font-weight: 600;
+    text-decoration: none; transition: background var(--transition);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-white-sm:hover { background: rgba(255,255,255,.35); color: white; text-decoration: none; }
+
+  /* Вкладки */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 8px 16px; border-radius: 50px; border: 1.5px solid var(--border);
+    background: var(--white); font-size: .85rem; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; white-space: nowrap; transition: all var(--transition);
+    font-family: inherit;
+  }
+  .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .tab-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Медзаписи */
+  .record-item {
+    display: flex; gap: 12px; padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .record-item:last-child { border-bottom: none; }
+  .record-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+  }
+  .record-dot.vaccination { background: var(--accent); }
+  .record-dot.diagnosis   { background: var(--danger); }
+  .record-dot.procedure   { background: var(--warning); }
+  .record-dot.other       { background: var(--gray); }
+  .record-title { font-weight: 600; font-size: .92rem; margin-bottom: 2px; }
+  .record-meta  { font-size: .78rem; color: var(--text-muted); }
+  .record-desc  { font-size: .85rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* Документы */
+  .doc-category { margin-bottom: 20px; }
+  .doc-category-title {
+    font-size: .78rem; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: 10px;
+  }
+  .doc-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--gray-light);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    text-decoration: none; color: inherit;
+    transition: background var(--transition);
+    border: 1px solid transparent;
+  }
+  .doc-item:hover { background: var(--primary-bg); border-color: rgba(108,99,255,.2); text-decoration: none; color: inherit; }
+  .doc-icon { font-size: 1.6rem; flex-shrink: 0; }
+  .doc-name { font-weight: 600; font-size: .88rem; margin-bottom: 2px; }
+  .doc-meta { font-size: .75rem; color: var(--text-muted); }
+  .doc-actions { margin-left: auto; display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* Инфо-сетка */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .info-cell {
+    background: var(--gray-light); border-radius: var(--radius-sm);
+    padding: 12px 14px;
+  }
+  .info-cell-label { font-size: .72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+  .info-cell-value { font-size: .92rem; font-weight: 600; }
+
+  /* QR */
+  .qr-section { text-align: center; padding: 8px 0; }
+  .qr-section p { color: var(--text-muted); font-size: .88rem; margin-bottom: 16px; }
+  .qr-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  @media (max-width: 480px) {
+    .pet-hero { flex-wrap: wrap; }
+    .pet-hero-actions { margin-left: 0; width: 100%; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="card">
-  <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-    <div style="font-size: 2.8rem;">
-  {% animal_icon pet.species %}
+<!-- Шапка питомца -->
+<div class="pet-hero">
+  <div class="pet-hero-avatar">{% animal_icon pet.species %}</div>
+  <div class="pet-hero-info">
+    <h1>{{ pet.name }}</h1>
+    <p>{{ pet.get_species_display }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</p>
+  </div>
+  <div class="pet-hero-actions">
+    <a href="{% url 'pets:pet_edit' pet.pk %}" class="btn-white-sm">✏️ Изменить</a>
+  </div>
 </div>
-    <div>
-      <h1 style="margin: 0; color: var(--primary-dark);">{{ pet.name }}</h1>
-      <p style="margin: 0; color: var(--gray);">{{ pet.get_species_display }}{% if pet.breed %}, {{ pet.breed }}{% endif %}</p>
+
+<!-- Вкладки -->
+<div class="tabs" role="tablist">
+  <button class="tab-btn active" data-tab="info" role="tab">📋 Инфо</button>
+  <button class="tab-btn" data-tab="records" role="tab">🩺 Медкарта <span class="badge badge-primary" style="margin-left:4px">{{ records|length }}</span></button>
+  <button class="tab-btn" data-tab="docs" role="tab">📎 Документы <span class="badge badge-primary" style="margin-left:4px">{{ all_documents|length }}</span></button>
+  <button class="tab-btn" data-tab="qr" role="tab">📱 QR-паспорт</button>
+</div>
+
+<!-- Инфо -->
+<div class="tab-panel active" id="tab-info">
+  <div class="card">
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-cell-label">Дата рождения</div>
+        <div class="info-cell-value">{{ pet.birth_date|date:"d.m.Y"|default:"—" }}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Номер чипа</div>
+        <div class="info-cell-value">{{ pet.chip_number|default:"—" }}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Вид</div>
+        <div class="info-cell-value">{{ pet.get_species_display }}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-cell-label">Порода</div>
+        <div class="info-cell-value">{{ pet.breed|default:"—" }}</div>
+      </div>
     </div>
+    {% if pet.photo %}
+      <div class="mt-3">
+        <img src="{{ pet.photo.url }}" alt="{{ pet.name }}" style="max-height:220px;width:100%;object-fit:cover;border-radius:var(--radius-sm)">
+      </div>
+    {% endif %}
   </div>
-
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin: 1.5rem 0;">
-    <div>
-      <strong>Дата рождения</strong>
-      <p>{{ pet.birth_date|default:"—" }}</p>
-    </div>
-    <div>
-      <strong>Номер чипа</strong>
-      <p>{{ pet.chip_number|default:"—" }}</p>
-    </div>
+  <div class="flex gap-2 flex-wrap">
+    <a href="{% url 'pets:pet_edit' pet.pk %}" class="btn btn-ghost flex-1">✏️ Редактировать</a>
+    <a href="{% url 'pets:pet_delete' pet.pk %}" class="btn btn-danger flex-1">🗑 Удалить</a>
   </div>
+</div>
 
-  <div style="margin: 2rem 0; padding-top: 1.5rem; border-top: 1px solid #eee;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-      <h2 style="font-size: 1.4rem; color: var(--primary-dark);">Медицинская история</h2>
-      <a href="{% url 'medical_records:record_add' pet_pk=pet.pk %}" class="btn" style="padding: 8px 16px; font-size: 0.95rem;">+ Добавить запись</a>
+<!-- Медкарта -->
+<div class="tab-panel" id="tab-records">
+  <div class="card">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="mb-0">Медицинские записи</h2>
+      <a href="{% url 'medical_records:record_add' pet_pk=pet.pk %}" class="btn btn-sm">+ Добавить</a>
     </div>
-
-    {% if pet.medical_records.all %}
-      <div style="display: flex; flex-direction: column; gap: 1rem;">
-        {% for record in pet.medical_records.all %}
-          <div style="
-            background: #f9fbfd;
-            padding: 1rem;
-            border-radius: var(--radius);
-            border-left: 4px solid 
-              {% if record.record_type == 'vaccination' %}var(--success)
-              {% elif record.record_type == 'diagnosis' %}#e74a3b
-              {% elif record.record_type == 'procedure' %}#f6c23e
-              {% else %}var(--gray){% endif %};
-          ">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
-              <strong>{{ record.title }}</strong>
-              <span style="color: var(--gray); font-size: 0.9rem;">{{ record.date }}</span>
-            </div>
-            <p style="font-size: 0.95rem; margin-bottom: 0.5rem;">{{ record.get_record_type_display }}</p>
-            {% if record.description %}<p>{{ record.description }}</p>{% endif %}
-            {% if record.document %}
-              <a href="{{ record.document.url }}" target="_blank" class="btn btn-sm" style="margin-top: 0.5rem; padding: 6px 12px; font-size: 0.85rem;">📎 Скачать документ</a>
+    {% if records %}
+      {% for record in records %}
+        <div class="record-item">
+          <div class="record-dot {{ record.record_type }}"></div>
+          <div class="flex-1">
+            <div class="record-title">{{ record.title }}</div>
+            <div class="record-meta">{{ record.get_record_type_display }} · {{ record.date|date:"d.m.Y" }}</div>
+            {% if record.description %}
+              <div class="record-desc">{{ record.description|truncatewords:20 }}</div>
             {% endif %}
+            {% if record.document %}
+              <a href="{{ record.document.url }}" target="_blank" class="btn btn-ghost btn-sm mt-1">📎 Документ</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="text-center" style="padding:32px 0">
+        <div style="font-size:2.5rem;margin-bottom:10px">🩺</div>
+        <p class="text-muted">Записей пока нет</p>
+        <a href="{% url 'medical_records:record_add' pet_pk=pet.pk %}" class="btn btn-sm mt-2">Добавить первую запись</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Документы -->
+<div class="tab-panel" id="tab-docs" id="documents">
+  <div class="flex justify-between items-center mb-3">
+    <h2 class="mb-0">Документы</h2>
+    <a href="{% url 'pets:doc_add' pet_pk=pet.pk %}" class="btn btn-sm">+ Загрузить</a>
+  </div>
+
+  {% if documents_by_category %}
+    {% for cat_label, docs in documents_by_category.items %}
+      <div class="doc-category">
+        <div class="doc-category-title">{{ cat_label }}</div>
+        {% for doc in docs %}
+          <div class="doc-item">
+            <span class="doc-icon">{% if doc.is_pdf %}📄{% elif doc.is_image %}🖼{% else %}📎{% endif %}</span>
+            <div class="flex-1">
+              <div class="doc-name">{{ doc.title }}</div>
+              <div class="doc-meta">
+                {% if doc.date %}{{ doc.date|date:"d.m.Y" }} · {% endif %}{{ doc.filename }}
+              </div>
+            </div>
+            <div class="doc-actions">
+              <a href="{{ doc.file.url }}" target="_blank" class="btn btn-ghost btn-sm">Открыть</a>
+              <a href="{% url 'pets:doc_delete' doc.pk %}" class="btn btn-danger btn-sm">✕</a>
+            </div>
           </div>
         {% endfor %}
       </div>
-    {% else %}
-      <p style="color: var(--gray);">Нет записей. <a href="{% url 'medical_records:record_add' pet_pk=pet.pk %}" class="btn-link">Добавьте первую</a>.</p>
-    {% endif %}
-  </div>
+    {% endfor %}
+  {% else %}
+    <div class="card text-center" style="padding:40px 20px">
+      <div style="font-size:3rem;margin-bottom:12px">📂</div>
+      <h3>Документов пока нет</h3>
+      <p class="text-muted">Загрузите справки о прививках, анализы, рецепты и другие документы</p>
+      <a href="{% url 'pets:doc_add' pet_pk=pet.pk %}" class="btn mt-3">Загрузить документ</a>
+    </div>
+  {% endif %}
+</div>
 
-  <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
-    <h2 style="font-size: 1.4rem; margin-bottom: 1rem;">QR-паспорт</h2>
-    <p style="margin-bottom: 1rem;">Этот QR-код ведёт на публичную страницу с данными питомца. Его можно распечатать или показать ветеринару.</p>
-    <div style="display: flex; gap: 1rem;">
-      <a href="{% url 'pets:pet_qr_view' pet.qr_uuid %}" target="_blank" class="btn" style="flex: 1;">Открыть паспорт</a>
-      <a href="{% url 'pets:pet_qr_download' pet.qr_uuid %}" class="btn" style="flex: 1; background: var(--success);">Скачать QR</a>
+<!-- QR-паспорт -->
+<div class="tab-panel" id="tab-qr">
+  <div class="card qr-section">
+    <div style="font-size:3rem;margin-bottom:12px">📱</div>
+    <h2>QR-паспорт {{ pet.name }}</h2>
+    <p>Покажите этот QR-код ветеринару — он увидит все данные питомца без регистрации</p>
+    <div class="qr-btns">
+      <a href="{% url 'pets:pet_qr_view' pet.qr_uuid %}" target="_blank" class="btn">Открыть паспорт</a>
+      <a href="{% url 'pets:pet_qr_download' pet.qr_uuid %}" class="btn btn-ghost">Скачать QR</a>
     </div>
   </div>
-
-  <div style="margin-top: 2rem; text-align: center;">
-    <a href="{% url 'pets:pet_edit' pet.pk %}" class="btn" style="background: var(--primary);">✏️ Редактировать данные</a>
-    <a href="{% url 'pets:pet_list' %}" class="btn" style="background: #6c757d;">← Назад к списку</a>
-  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  });
+});
+
+// Открыть вкладку документов если в URL есть #documents
+if (window.location.hash === '#documents') {
+  document.querySelector('[data-tab="docs"]')?.click();
+}
+</script>
 {% endblock %}

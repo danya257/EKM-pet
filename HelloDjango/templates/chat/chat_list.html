@@ -1,33 +1,63 @@
 {% extends 'base.html' %}
-{% block title %}Мои чаты — EKM-PET{% endblock %}
+{% block title %}Чаты — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .chat-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    text-decoration: none; color: inherit;
+    transition: box-shadow var(--transition), transform var(--transition);
+  }
+  .chat-item:hover { box-shadow: var(--shadow); transform: translateY(-1px); text-decoration: none; color: inherit; }
+  .chat-avatar {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; color: white; font-weight: 700; flex-shrink: 0;
+  }
+  .chat-name { font-weight: 600; font-size: .92rem; margin-bottom: 2px; }
+  .chat-preview { font-size: .8rem; color: var(--text-muted); }
+  .chat-date { font-size: .75rem; color: var(--text-muted); margin-left: auto; flex-shrink: 0; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="card">
-  <h1>💬 Мои чаты</h1>
-  {% if chats %}
-    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1.5rem;">
-      {% for chat in chats %}
-        <a href="{% url 'chat:chat_detail' chat.id %}" style="padding: 1.2rem; background: #f9fbfd; border-radius: var(--radius); text-decoration: none; color: var(--dark);">
-          <div style="display: flex; justify-content: space-between;">
-            <strong>
-              {% if user.user_type == 'owner' %}{{ chat.vet.get_full_name|default:chat.vet.username }} ({{ chat.clinic.name }})
-              {% else %}{{ chat.owner.get_full_name|default:chat.owner.username }}{% endif %}
-            </strong>
-            <span style="color: var(--gray); font-size: 0.9rem;">{{ chat.created_at|date:"d.m.Y" }}</span>
-          </div>
-          {% with last_msg=chat.messages.last %}
-            {% if last_msg %}
-              <div style="margin-top: 0.5rem; color: var(--gray); font-size: 0.95rem;">
-                {{ last_msg.sender.username }}: {{ last_msg.text|truncatechars:50 }}
-              </div>
-            {% endif %}
-          {% endwith %}
-        </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p>У вас пока нет чатов.</p>
-    <a href="{% url 'clinics:clinic_list_public' %}" class="btn" style="margin-top: 1rem;">Найти клинику</a>
-  {% endif %}
-</div>
+<h1 class="mb-3">💬 Чаты</h1>
+
+{% if chats %}
+  {% for chat in chats %}
+    <a href="{% url 'chat:chat_detail' chat.id %}" class="chat-item">
+      <div class="chat-avatar">
+        {% if user.user_type == 'owner' %}{{ chat.vet.get_full_name|default:chat.vet.username|slice:":1"|upper }}
+        {% else %}{{ chat.owner.get_full_name|default:chat.owner.username|slice:":1"|upper }}{% endif %}
+      </div>
+      <div class="flex-1">
+        <div class="chat-name">
+          {% if user.user_type == 'owner' %}{{ chat.vet.get_full_name|default:chat.vet.username }} · {{ chat.clinic.name }}
+          {% else %}{{ chat.owner.get_full_name|default:chat.owner.username }}{% endif %}
+        </div>
+        {% with last_msg=chat.messages.last %}
+          {% if last_msg %}
+            <div class="chat-preview">{{ last_msg.sender.username }}: {{ last_msg.text|truncatechars:40 }}</div>
+          {% else %}
+            <div class="chat-preview text-muted">Нет сообщений</div>
+          {% endif %}
+        {% endwith %}
+      </div>
+      <div class="chat-date">{{ chat.created_at|date:"d.m" }}</div>
+    </a>
+  {% endfor %}
+{% else %}
+  <div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:2.5rem;margin-bottom:12px">💬</div>
+    <h3>Чатов пока нет</h3>
+    <p class="text-muted">Найдите клинику и напишите ветеринару</p>
+    <a href="{% url 'clinics:clinic_list_public' %}" class="btn mt-3">Найти клинику</a>
+  </div>
+{% endif %}
 {% endblock %}

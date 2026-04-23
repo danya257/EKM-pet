@@ -1,23 +1,23 @@
-<!-- templates/blog/article_detail.html -->
 {% extends 'base.html' %}
 {% block title %}{{ article.title }} — EKM-PET{% endblock %}
 
 {% block content %}
-<div class="card">
-  <div style="text-align: center; margin-bottom: 1.5rem;">
-    <h1>{{ article.title }}</h1>
-    <p style="color: var(--gray); font-size: 0.95rem; margin-top: 0.5rem;">
-      Автор: {{ article.author.get_full_name|default:article.author.username|default:"Администрация EKM-PET" }} 
-      | Опубликовано: {{ article.published_at|date:"d.m.Y" }}
-    </p>
-  </div>
+<div class="flex items-center gap-2 mb-3">
+  <a href="{% url 'blog:home' %}" class="icon-btn">←</a>
+  <span class="text-muted text-sm">Блог</span>
+</div>
 
-  <div style="line-height: 1.8; font-size: 1.05rem;">
+<div class="card">
+  <h1>{{ article.title }}</h1>
+  <p class="text-muted text-sm mb-3">
+    {{ article.author.get_full_name|default:article.author.username|default:"Редакция EKM-PET" }}
+    · {{ article.published_at|date:"d.m.Y" }}
+  </p>
+  <hr class="divider">
+  <div style="line-height:1.8;font-size:.95rem">
     {{ article.content|linebreaks }}
   </div>
-
-  <div style="margin-top: 2.5rem; text-align: center;">
-    <a href="{% url 'blog:home' %}" class="btn" style="background: #6c757d;">← Все статьи</a>
-  </div>
 </div>
+
+<a href="{% url 'blog:home' %}" class="btn btn-gray">← Все статьи</a>
 {% endblock %}

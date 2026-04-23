@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}Вход по PIN — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-wrap { max-width: 360px; margin: 0 auto; }
+  .pin-header { text-align: center; margin-bottom: 24px; }
+  .pin-header .paw { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+  .pin-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; color: white; font-weight: 700;
+    margin: 0 auto 10px;
+  }
+  .pin-dots { display: flex; justify-content: center; gap: 14px; margin: 20px 0 16px; }
+  .pin-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border); background: transparent;
+    transition: all .15s;
+  }
+  .pin-dot.filled { background: var(--primary); border-color: var(--primary); transform: scale(1.1); }
+  .pin-dot.error  { background: var(--danger); border-color: var(--danger); animation: shake .3s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+  .pin-pad { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; max-width: 280px; margin: 0 auto 16px; }
+  .pin-key {
+    height: 64px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--white);
+    font-size: 1.4rem; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all .12s;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-key:hover  { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
+  .pin-key:active { transform: scale(.93); background: var(--primary); color: white; border-color: var(--primary); }
+  .pin-key.del    { font-size: 1rem; color: var(--text-muted); }
+  .pin-key.empty  { border: none; background: transparent; cursor: default; }
+  .pin-key.empty:hover { background: transparent; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="pin-header">
+    <div class="pin-avatar">{{ username|slice:":1"|upper }}</div>
+    <h2>{{ username }}</h2>
+    <p class="text-muted text-sm">Введите PIN-код для входа</p>
+  </div>
+
+  <div class="card">
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" data-n="1">1</button>
+      <button class="pin-key" data-n="2">2</button>
+      <button class="pin-key" data-n="3">3</button>
+      <button class="pin-key" data-n="4">4</button>
+      <button class="pin-key" data-n="5">5</button>
+      <button class="pin-key" data-n="6">6</button>
+      <button class="pin-key" data-n="7">7</button>
+      <button class="pin-key" data-n="8">8</button>
+      <button class="pin-key" data-n="9">9</button>
+      <button class="pin-key empty"></button>
+      <button class="pin-key" data-n="0">0</button>
+      <button class="pin-key del" id="pinDel">⌫</button>
+    </div>
+    <div id="pinError" class="text-center text-danger text-sm mb-2" style="min-height:20px"></div>
+    <a href="{% url 'users:login' %}" class="btn btn-ghost btn-block btn-sm">Войти по паролю</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const dots = [0,1,2,3].map(i => document.getElementById('d'+i));
+  const errEl = document.getElementById('pinError');
+  let pin = '';
+
+  function updateDots() {
+    dots.forEach((d,i) => { d.classList.toggle('filled', i < pin.length); d.classList.remove('error'); });
+  }
+  function shakeError(msg) {
+    dots.forEach(d => d.classList.add('error'));
+    errEl.textContent = msg;
+    setTimeout(() => { dots.forEach(d => d.classList.remove('error')); errEl.textContent = ''; pin = ''; updateDots(); }, 1200);
+    pin = '';
+  }
+  async function submit() {
+    try {
+      const res = await fetch('{% url "users:pin_login" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+        body: JSON.stringify({ pin, username: '{{ username }}' })
+      });
+      const data = await res.json();
+      if (data.ok) window.location.href = data.redirect;
+      else shakeError(data.error || 'Неверный PIN');
+    } catch(e) { shakeError('Ошибка соединения'); }
+  }
+  document.querySelectorAll('.pin-key[data-n]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (pin.length >= 4) return;
+      pin += btn.dataset.n; updateDots();
+      if (pin.length === 4) setTimeout(submit, 120);
+    });
+  });
+  document.getElementById('pinDel').addEventListener('click', () => { pin = pin.slice(0,-1); updateDots(); });
+  document.addEventListener('keydown', e => {
+    if (e.key >= '0' && e.key <= '9' && pin.length < 4) { pin += e.key; updateDots(); if (pin.length===4) setTimeout(submit,120); }
+    if (e.key === 'Backspace') { pin = pin.slice(0,-1); updateDots(); }
+  });
+  function getCsrf() {
+    return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+  }
+})();
+</script>
+{% endblock %}

@@ -1,59 +1,279 @@
-<!-- templates/users/profile.html -->
 {% extends 'base.html' %}
-
 {% block title %}Профиль — EKM-PET{% endblock %}
 
+{% block extra_head %}
+<style>
+  .profile-header {
+    background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    color: white;
+    margin-bottom: 16px;
+  }
+  .profile-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; font-weight: 700; color: white;
+    margin: 0 auto 12px;
+    border: 3px solid rgba(255,255,255,.4);
+  }
+  .profile-header h1 { color: white; font-size: 1.3rem; margin-bottom: 4px; }
+  .profile-header p  { color: rgba(255,255,255,.8); font-size: .85rem; margin: 0; }
+
+  .info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { font-size: .8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .info-value { font-size: .95rem; font-weight: 500; color: var(--text); }
+
+  /* PIN-секция */
+  .pin-section { }
+  .pin-status {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pin-status-icon { font-size: 1.5rem; }
+  .pin-status-text h3 { font-size: .95rem; margin-bottom: 2px; }
+  .pin-status-text p  { font-size: .8rem; color: var(--text-muted); margin: 0; }
+
+  /* PIN-ввод */
+  .pin-setup-wrap { display: none; }
+  .pin-setup-wrap.visible { display: block; }
+  .pin-dots-setup {
+    display: flex; justify-content: center; gap: 14px;
+    margin: 16px 0;
+  }
+  .pin-dot-s {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--border); background: transparent;
+    transition: all .15s;
+  }
+  .pin-dot-s.filled { background: var(--primary); border-color: var(--primary); }
+  .pin-pad-s {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    max-width: 260px; margin: 0 auto 16px;
+  }
+  .pin-key-s {
+    height: 56px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--white);
+    font-size: 1.3rem; font-weight: 600; font-family: inherit;
+    cursor: pointer; transition: all .12s;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-key-s:hover  { background: var(--primary-bg); border-color: var(--primary); color: var(--primary); }
+  .pin-key-s:active { transform: scale(.93); background: var(--primary); color: white; border-color: var(--primary); }
+  .pin-key-s.del    { font-size: 1rem; color: var(--text-muted); }
+  .pin-key-s.empty  { border: none; background: transparent; cursor: default; }
+  .pin-key-s.empty:hover { background: transparent; }
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- Шапка профиля -->
+<div class="profile-header">
+  <div class="profile-avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</div>
+  <h1>{{ user.get_full_name|default:user.username }}</h1>
+  <p>{{ user.get_user_type_display }}</p>
+</div>
+
+<!-- Данные -->
 <div class="card">
-  <h1>👤 Мой профиль</h1>
-
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
-    <div class="profile-item">
-      <div class="profile-label">Имя пользователя</div>
-      <div class="profile-value">{{ user.username }}</div>
-    </div>
-    <div class="profile-item">
-      <div class="profile-label">Имя</div>
-      <div class="profile-value">{{ user.first_name|default:"—" }}</div>
-    </div>
-    <div class="profile-item">
-      <div class="profile-label">Фамилия</div>
-      <div class="profile-value">{{ user.last_name|default:"—" }}</div>
-    </div>
-    <div class="profile-item">
-      <div class="profile-label">Email</div>
-      <div class="profile-value">{{ user.email|default:"—" }}</div>
-    </div>
-    <div class="profile-item">
-      <div class="profile-label">Роль</div>
-      <div class="profile-value" style="color: var(--primary); font-weight: 600;">
-        {{ user.get_user_type_display }}
-      </div>
-    </div>
+  <h2 class="mb-2">Данные аккаунта</h2>
+  <div class="info-row">
+    <span class="info-label">Логин</span>
+    <span class="info-value">{{ user.username }}</span>
   </div>
-
-  <div style="margin-top: 2rem; text-align: center;">
-    <a href="{% url 'core:dashboard' %}" class="btn">← Вернуться в кабинет</a>
+  <div class="info-row">
+    <span class="info-label">Имя</span>
+    <span class="info-value">{{ user.first_name|default:"—" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Фамилия</span>
+    <span class="info-value">{{ user.last_name|default:"—" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Email</span>
+    <span class="info-value">{{ user.email|default:"—" }}</span>
+  </div>
+  <div class="info-row">
+    <span class="info-label">Роль</span>
+    <span class="info-value"><span class="badge badge-primary">{{ user.get_user_type_display }}</span></span>
   </div>
 </div>
 
-<style>
-  .profile-item {
-    padding: 1rem;
-    background: #f9fbfd;
-    border-radius: var(--radius);
-    border: 1px solid #eef2f7;
+<!-- PIN-код -->
+<div class="card">
+  <h2 class="mb-2">Быстрый вход</h2>
+  <div class="pin-status">
+    <span class="pin-status-icon">{% if user.pin_enabled %}🔐{% else %}🔓{% endif %}</span>
+    <div class="pin-status-text flex-1">
+      <h3>PIN-код {% if user.pin_enabled %}<span class="badge badge-success">Включён</span>{% else %}<span class="badge badge-gray">Выключен</span>{% endif %}</h3>
+      <p>{% if user.pin_enabled %}Вы можете входить по 4-значному PIN без пароля{% else %}Настройте PIN для быстрого входа{% endif %}</p>
+    </div>
+  </div>
+
+  {% if user.pin_enabled %}
+    <div class="flex gap-2 mt-2 flex-wrap">
+      <button class="btn btn-ghost btn-sm" id="btnChangePin">Изменить PIN</button>
+      <button class="btn btn-danger btn-sm" id="btnDisablePin">Отключить PIN</button>
+    </div>
+  {% else %}
+    <button class="btn btn-sm mt-2" id="btnSetPin">Установить PIN</button>
+    {% if suggest_pin %}
+      <div class="alert alert-info mt-2">💡 Рекомендуем установить PIN для быстрого входа</div>
+    {% endif %}
+  {% endif %}
+
+  <!-- Форма ввода PIN -->
+  <div class="pin-setup-wrap mt-3" id="pinSetupWrap">
+    <p class="text-muted text-sm text-center mb-1" id="pinSetupHint">Введите новый PIN-код</p>
+    <div class="pin-dots-setup" id="pinDotsSetup">
+      <div class="pin-dot-s" id="sd0"></div>
+      <div class="pin-dot-s" id="sd1"></div>
+      <div class="pin-dot-s" id="sd2"></div>
+      <div class="pin-dot-s" id="sd3"></div>
+    </div>
+    <div class="pin-pad-s">
+      <button class="pin-key-s" data-n="1">1</button>
+      <button class="pin-key-s" data-n="2">2</button>
+      <button class="pin-key-s" data-n="3">3</button>
+      <button class="pin-key-s" data-n="4">4</button>
+      <button class="pin-key-s" data-n="5">5</button>
+      <button class="pin-key-s" data-n="6">6</button>
+      <button class="pin-key-s" data-n="7">7</button>
+      <button class="pin-key-s" data-n="8">8</button>
+      <button class="pin-key-s" data-n="9">9</button>
+      <button class="pin-key-s empty"></button>
+      <button class="pin-key-s" data-n="0">0</button>
+      <button class="pin-key-s del" id="pinDelS">⌫</button>
+    </div>
+    <div id="pinSetupMsg" class="text-center text-sm mb-2" style="min-height:20px"></div>
+    <button class="btn btn-ghost btn-block btn-sm" id="cancelPin">Отмена</button>
+  </div>
+</div>
+
+<!-- Выход -->
+<div class="card">
+  <a href="{% url 'users:logout' %}" class="btn btn-danger btn-block">Выйти из аккаунта</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  const STORAGE_KEY = 'ekm_pin_user';
+
+  function getCsrf() {
+    return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1] || '';
   }
-  .profile-label {
-    font-size: 0.85rem;
-    color: var(--gray);
-    margin-bottom: 0.4rem;
-    font-weight: 500;
+
+  // ── PIN setup ──
+  const wrap    = document.getElementById('pinSetupWrap');
+  const dots    = [0,1,2,3].map(i => document.getElementById('sd'+i));
+  const msg     = document.getElementById('pinSetupMsg');
+  const hint    = document.getElementById('pinSetupHint');
+  let pinVal    = '';
+  let firstPin  = '';
+  let step      = 'enter'; // 'enter' | 'confirm'
+
+  function updateDots() {
+    dots.forEach((d,i) => d.classList.toggle('filled', i < pinVal.length));
   }
-  .profile-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--dark);
+
+  function resetSetup() {
+    pinVal = ''; firstPin = ''; step = 'enter';
+    hint.textContent = 'Введите новый PIN-код';
+    msg.textContent = '';
+    msg.className = 'text-center text-sm mb-2';
+    updateDots();
   }
-</style>
+
+  function showWrap() { wrap.classList.add('visible'); resetSetup(); }
+  function hideWrap() { wrap.classList.remove('visible'); resetSetup(); }
+
+  document.getElementById('btnSetPin')?.addEventListener('click', showWrap);
+  document.getElementById('btnChangePin')?.addEventListener('click', showWrap);
+  document.getElementById('cancelPin')?.addEventListener('click', hideWrap);
+
+  document.querySelectorAll('.pin-key-s[data-n]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (pinVal.length >= 4) return;
+      pinVal += btn.dataset.n;
+      updateDots();
+      if (pinVal.length === 4) setTimeout(handlePinStep, 120);
+    });
+  });
+
+  document.getElementById('pinDelS')?.addEventListener('click', () => {
+    pinVal = pinVal.slice(0, -1);
+    updateDots();
+  });
+
+  async function handlePinStep() {
+    if (step === 'enter') {
+      firstPin = pinVal;
+      pinVal = '';
+      step = 'confirm';
+      hint.textContent = 'Повторите PIN-код';
+      updateDots();
+    } else {
+      if (pinVal !== firstPin) {
+        msg.textContent = 'PIN не совпадает, попробуйте снова';
+        msg.className = 'text-center text-sm mb-2 text-danger';
+        setTimeout(resetSetup, 1000);
+        return;
+      }
+      // Отправляем
+      try {
+        const res = await fetch('{% url "users:pin_setup" %}', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+          body: JSON.stringify({ pin: pinVal })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          // Сохраняем в localStorage для PIN-экрана
+          localStorage.setItem('ekm_pin_user', JSON.stringify({
+            username: '{{ user.username }}',
+            display:  '{{ user.get_full_name|default:user.username }}'
+          }));
+          msg.textContent = '✅ PIN установлен!';
+          msg.className = 'text-center text-sm mb-2 text-success';
+          setTimeout(() => location.reload(), 800);
+        } else {
+          msg.textContent = data.error || 'Ошибка';
+          msg.className = 'text-center text-sm mb-2 text-danger';
+          setTimeout(resetSetup, 1000);
+        }
+      } catch(e) {
+        msg.textContent = 'Ошибка соединения';
+        msg.className = 'text-center text-sm mb-2 text-danger';
+        setTimeout(resetSetup, 1000);
+      }
+    }
+  }
+
+  // ── Отключить PIN ──
+  document.getElementById('btnDisablePin')?.addEventListener('click', async () => {
+    if (!confirm('Отключить PIN-код?')) return;
+    const res = await fetch('{% url "users:pin_disable" %}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: '{}'
+    });
+    const data = await res.json();
+    if (data.ok) {
+      localStorage.removeItem('ekm_pin_user');
+      location.reload();
+    }
+  });
+})();
+</script>
 {% endblock %}

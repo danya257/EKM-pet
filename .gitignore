@@ -1,4 +1,4 @@
-```
+```gitignore
 # Python
 __pycache__/
 *.py[cod]
@@ -20,27 +20,14 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 
 # Django
 *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-
-# Virtual Environment
-venv/
-ENV/
-env/
-.venv/
-.env/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
+media/
+staticfiles/
+.env
 ```

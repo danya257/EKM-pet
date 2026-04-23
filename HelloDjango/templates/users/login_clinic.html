@@ -26,3 +26,30 @@
   </div>
 </div>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.input-group input').forEach(input => {
+    // Сохраняем оригинальный placeholder в data-атрибут
+    const originalPlaceholder = input.getAttribute('placeholder') || '';
+    input.setAttribute('data-placeholder', originalPlaceholder);
+    
+    // Функция обновления placeholder
+    const updatePlaceholder = () => {
+      if (input.value.length > 0 || document.activeElement === input) {
+        input.setAttribute('placeholder', '');
+      } else {
+        input.setAttribute('placeholder', originalPlaceholder);
+      }
+    };
+    
+    // Слушаем события
+    input.addEventListener('input', updatePlaceholder);
+    input.addEventListener('focus', updatePlaceholder);
+    input.addEventListener('blur', updatePlaceholder);
+    
+    // Проверяем при загрузке (автозаполнение)
+    setTimeout(updatePlaceholder, 100);
+  });
+});
+</script>

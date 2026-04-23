@@ -3,57 +3,108 @@
 {% load pet_tags %}
 {% block title %}Мои питомцы — EKM-PET{% endblock %}
 
-{% block content %}
-<div class="card">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h1>Мои питомцы</h1>
-    <a href="{% url 'pets:pet_add' %}" class="btn">+ Добавить питомца</a>
-  </div>
-
-  {% if pets %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
-      {% for pet in pets %}
-        <div class="pet-card" style="
-          background: white;
-          border-radius: var(--radius);
-          box-shadow: var(--card-shadow);
-          overflow: hidden;
-          transition: transform 0.3s, box-shadow 0.3s;
-        ">
-          <div style="
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-          ">
-            <div style="font-size: 2.8rem;">
-  {% animal_icon pet.species %}
-</div>  
-            <h3 style="text-align: center; margin: 0; color: var(--primary-dark);">{{ pet.name }}</h3>
-            <p style="text-align: center; color: var(--gray); font-size: 0.95rem;">{{ pet.get_species_display }}</p>
-            {% if pet.breed %}<p style="text-align: center; font-size: 0.9rem;">Порода: {{ pet.breed }}</p>{% endif %}
-            {% if pet.birth_date %}
-              <p style="text-align: center; font-size: 0.9rem;">ДР: {{ pet.birth_date }}</p>
-            {% endif %}
-            <div style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
-              <a href="{% url 'pets:pet_detail' pet.pk %}" class="btn" style="flex: 1; padding: 8px; font-size: 0.9rem;">Подробнее</a>
-              <a href="{% url 'pets:pet_qr_download' pet.qr_uuid %}" class="btn" style="flex: 1; padding: 8px; font-size: 0.9rem; background: var(--success);">QR</a>
-            </div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p style="text-align: center; color: var(--gray); font-style: italic;">
-      У вас пока нет питомцев. <a href="{% url 'pets:pet_add' %}" class="btn-link">Добавьте первого!</a>
-    </p>
-  {% endif %}
-</div>
-
+{% block extra_head %}
 <style>
-  .pet-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  .pets-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .pet-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition), transform var(--transition);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .pet-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); text-decoration: none; color: inherit; }
+  .pet-card-body { padding: 16px; }
+  .pet-card-top {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  }
+  .pet-emoji {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--primary-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; flex-shrink: 0;
+  }
+  .pet-name { font-size: 1.05rem; font-weight: 700; margin-bottom: 2px; }
+  .pet-species { font-size: .8rem; color: var(--text-muted); }
+  .pet-meta {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .pet-meta-item {
+    font-size: .78rem; color: var(--text-muted);
+    background: var(--gray-light);
+    padding: 3px 9px; border-radius: 50px;
+  }
+  .pet-card-actions { display: flex; gap: 8px; }
+  .pet-card-actions .btn { flex: 1; font-size: .82rem; padding: 8px 12px; }
+
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+  }
+  .empty-state .empty-icon { font-size: 4rem; display: block; margin-bottom: 16px; }
+  .empty-state h2 { margin-bottom: 8px; }
+  .empty-state p  { color: var(--text-muted); margin-bottom: 20px; }
+
+  .pets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 480px) {
+    .pets-grid { grid-template-columns: 1fr; }
   }
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="pets-header">
+  <h1>🐾 Мои питомцы</h1>
+  <a href="{% url 'pets:pet_add' %}" class="btn btn-sm">+ Добавить</a>
+</div>
+
+{% if pets %}
+  <div class="pets-grid">
+    {% for pet in pets %}
+      <div class="pet-card">
+        <div class="pet-card-body">
+          <div class="pet-card-top">
+            <div class="pet-emoji">{% animal_icon pet.species %}</div>
+            <div>
+              <div class="pet-name">{{ pet.name }}</div>
+              <div class="pet-species">{{ pet.get_species_display }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</div>
+            </div>
+          </div>
+          <div class="pet-meta">
+            {% if pet.birth_date %}
+              <span class="pet-meta-item">🎂 {{ pet.birth_date|date:"d.m.Y" }}</span>
+            {% endif %}
+            {% if pet.chip_number %}
+              <span class="pet-meta-item">💾 {{ pet.chip_number }}</span>
+            {% endif %}
+            <span class="pet-meta-item">📋 {{ pet.medical_records.count }} записей</span>
+            <span class="pet-meta-item">📎 {{ pet.documents.count }} документов</span>
+          </div>
+          <div class="pet-card-actions">
+            <a href="{% url 'pets:pet_detail' pet.pk %}" class="btn">Открыть</a>
+            <a href="{% url 'pets:pet_qr_download' pet.qr_uuid %}" class="btn btn-ghost">QR</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card empty-state">
+    <span class="empty-icon">🐾</span>
+    <h2>Питомцев пока нет</h2>
+    <p>Добавьте первого питомца, чтобы начать вести его медкарту</p>
+    <a href="{% url 'pets:pet_add' %}" class="btn btn-lg">+ Добавить питомца</a>
+  </div>
+{% endif %}
 {% endblock %}

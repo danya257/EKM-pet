@@ -3,75 +3,140 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ветпаспорт: {{ pet.name }}</title>
+  <title>Паспорт: {{ pet.name }} — EKM-PET</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary: #6c63ff;
+      --accent:  #00c9a7;
+      --text:    #1a1d2e;
+      --muted:   #6b7280;
+      --border:  #e8eaf0;
+      --bg:      #f4f6fa;
+      --radius:  14px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 30px;
-      background: white;
-      color: #333;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 16px 40px;
     }
-    .header {
+    .wrap { max-width: 560px; margin: 0 auto; }
+
+    .passport-header {
+      background: linear-gradient(135deg, #6c63ff 0%, #48c6ef 100%);
+      border-radius: var(--radius);
+      padding: 28px 24px;
       text-align: center;
-      border-bottom: 2px solid #4e73df;
-      margin-bottom: 2rem;
-      padding-bottom: 1.5rem;
+      color: white;
+      margin-bottom: 16px;
     }
-    .header h1 {
-      color: #4e73df;
-      margin: 0 0 8px;
-    }
-    .header .icon {
-      font-size: 3rem;
+    .passport-emoji { font-size: 3.5rem; display: block; margin-bottom: 10px; }
+    .passport-header h1 { color: white; font-size: 1.5rem; margin-bottom: 4px; }
+    .passport-header p  { color: rgba(255,255,255,.8); font-size: .88rem; margin: 0; }
+
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 18px;
       margin-bottom: 12px;
     }
-    .info {
-      font-size: 1.1rem;
-      line-height: 1.8;
+    .card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; font-size: .78rem; }
+
+    .info-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
     }
-    .info p {
-      margin: 12px 0;
+    .info-row:last-child { border-bottom: none; }
+    .info-label { font-size: .82rem; color: var(--muted); }
+    .info-value { font-size: .92rem; font-weight: 600; }
+
+    .record-item {
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: flex-start;
     }
+    .record-item:last-child { border-bottom: none; }
+    .record-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .record-dot.vaccination { background: var(--accent); }
+    .record-dot.diagnosis   { background: #ff5c7c; }
+    .record-dot.procedure   { background: #ffb347; }
+    .record-dot.other       { background: #a0aec0; }
+    .record-title { font-weight: 600; font-size: .88rem; }
+    .record-meta  { font-size: .75rem; color: var(--muted); }
+
     .watermark {
-      margin-top: 3rem;
-      text-align: center;
-      color: #888;
-      font-size: 0.9rem;
-      border-top: 1px dashed #eee;
-      padding-top: 1.5rem;
+      text-align: center; color: var(--muted); font-size: .75rem;
+      margin-top: 24px; padding-top: 16px;
+      border-top: 1px dashed var(--border);
     }
+    .watermark strong { color: var(--primary); }
+
     @media print {
-      body { margin: 0; padding: 20px; }
+      body { background: white; padding: 0; }
+      .card { box-shadow: none; }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="icon">
+<div class="wrap">
+  <div class="passport-header">
+    <span class="passport-emoji">
       {% if pet.species == 'dog' %}🐶
       {% elif pet.species == 'cat' %}🐱
       {% elif pet.species == 'bird' %}🐦
       {% elif pet.species == 'rodent' %}🐹
       {% elif pet.species == 'rabbit' %}🐰
       {% elif pet.species == 'reptile' %}🦎
-      {% else %}🐾
-      {% endif %}
-    </div>
-    <h1>Цифровой ветеринарный паспорт</h1>
-    <h2>{{ pet.name }} ({{ pet.get_species_display }})</h2>
+      {% else %}🐾{% endif %}
+    </span>
+    <h1>{{ pet.name }}</h1>
+    <p>Цифровой ветеринарный паспорт</p>
   </div>
 
-  <div class="info">
-    <p><strong>Порода:</strong> {{ pet.breed|default:"—" }}</p>
-    <p><strong>Дата рождения:</strong> {{ pet.birth_date|default:"—" }}</p>
-    <p><strong>Номер чипа:</strong> {{ pet.chip_number|default:"—" }}</p>
-    <p><em>Документ сгенерирован автоматически. Обновляется в реальном времени.</em></p>
+  <div class="card">
+    <h2>Основные данные</h2>
+    <div class="info-row">
+      <span class="info-label">Вид</span>
+      <span class="info-value">{{ pet.get_species_display }}</span>
+    </div>
+    {% if pet.breed %}
+    <div class="info-row">
+      <span class="info-label">Порода</span>
+      <span class="info-value">{{ pet.breed }}</span>
+    </div>
+    {% endif %}
+    <div class="info-row">
+      <span class="info-label">Дата рождения</span>
+      <span class="info-value">{{ pet.birth_date|date:"d.m.Y"|default:"—" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Номер чипа</span>
+      <span class="info-value">{{ pet.chip_number|default:"—" }}</span>
+    </div>
   </div>
+
+  {% if pet.medical_records.all %}
+  <div class="card">
+    <h2>Медицинская история</h2>
+    {% for record in pet.medical_records.all|slice:":10" %}
+      <div class="record-item">
+        <div class="record-dot {{ record.record_type }}"></div>
+        <div>
+          <div class="record-title">{{ record.title }}</div>
+          <div class="record-meta">{{ record.get_record_type_display }} · {{ record.date|date:"d.m.Y" }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
 
   <div class="watermark">
-    Официальный QR-паспорт | EKM-PET | UUID: {{ pet.qr_uuid }}
+    Документ сгенерирован автоматически<br>
+    <strong>EKM-PET</strong> · UUID: {{ pet.qr_uuid }}
   </div>
+</div>
 </body>
 </html>
