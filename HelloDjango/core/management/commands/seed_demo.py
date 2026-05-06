@@ -427,26 +427,26 @@ class Command(BaseCommand):
             f'Окно регистрации: {start_d.strftime("%d.%m.%Y")} — {end_d.strftime("%d.%m.%Y")}.'
         ))
 
-        # ── 2. Питомцы (только собаки и кошки) ──────────────────────────────
-        owners_with_pets = owners[:14]
+        # ── 2. Питомцы (только собаки и кошки, по одному на хозяина) ────────
+        # 29 владельцев из 32 получают РОВНО ОДНОГО питомца. Оставшиеся 3 — без.
+        N_OWNERS_WITH_PETS = 29
+        owners_with_pets = owners[:N_OWNERS_WITH_PETS]
         all_pets_to_create = []
         for o in owners_with_pets:
-            for _ in range(random.randint(1, 3)):
-                species = weighted_choice(SPECIES_WEIGHTS)
-                breed = random.choice(BREEDS[species])
-                age_days = random.randint(180, 4500)
-                chip = gen_chip() if random.random() < 0.6 else None
-                # Уникальность chip_number — проверим коллизии
-                if chip and Pet.objects.filter(chip_number=chip).exists():
-                    chip = None
-                all_pets_to_create.append(Pet(
-                    owner=o,
-                    name=random.choice(PET_NAMES),
-                    species=species,
-                    breed=breed,
-                    birth_date=(end_d - timedelta(days=age_days)),
-                    chip_number=chip,
-                ))
+            species = weighted_choice(SPECIES_WEIGHTS)
+            breed = random.choice(BREEDS[species])
+            age_days = random.randint(180, 4500)
+            chip = gen_chip() if random.random() < 0.6 else None
+            if chip and Pet.objects.filter(chip_number=chip).exists():
+                chip = None
+            all_pets_to_create.append(Pet(
+                owner=o,
+                name=random.choice(PET_NAMES),
+                species=species,
+                breed=breed,
+                birth_date=(end_d - timedelta(days=age_days)),
+                chip_number=chip,
+            ))
 
         # Создаём по одному, чтобы UUID/QR корректно сгенерировались (в bulk_create
         # default-функция тоже работает, но при коллизии chip падает вся пачка)
@@ -468,20 +468,24 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'✓ Питомцы: {len(pets_created)}'))
 
         # ── 3. Документы (PetDocument) ──────────────────────────────────────
+        # Только первые 28 из 29 владельцев с питомцами получают документы.
+        # Итого «без документов» = 1 (с питомцем) + 3 (без питомца) = 4 пользователя.
+        N_OWNERS_WITH_DOCS = 28
+        owners_with_docs = owners_with_pets[:N_OWNERS_WITH_DOCS]
         docs_made = 0
         owners_with_3plus = set()
         templates = doc_titles()
-        pets_by_owner = {}
-        for p in pets_created:
-            pets_by_owner.setdefault(p.owner_id, []).append(p)
 
-        for owner_id, pets in pets_by_owner.items():
+        # Мапа owner_id -> его питомец (по одному, потому что max 1 на хозяина)
+        pet_by_owner = {p.owner_id: p for p in pets_created}
+
+        for o in owners_with_docs:
+            pet = pet_by_owner.get(o.id)
+            if not pet:
+                continue
             target = random.randint(3, 7)
-            owner_docs = 0
-            owner_obj = pets[0].owner
-            joined_date = owner_obj.date_joined.date()
-            while owner_docs < target:
-                pet = random.choice(pets)
+            joined_date = o.date_joined.date()
+            for _ in range(target):
                 category = random.choice(list(templates.keys()))
                 tpl_title, tpl_descr = random.choice(templates[category])
                 doc_date = joined_date + timedelta(
@@ -498,38 +502,44 @@ class Command(BaseCommand):
                 else:
                     doc.file.name = f'documents/pet_{pet.pk}/{category}/{category}_{random.randint(1000, 9999)}.pdf'
                 doc.save()
-                # Поправим uploaded_at (auto_now_add)
                 upload_dt = random_datetime_in_range(doc_date, end_d, tz)
                 PetDocument.objects.filter(pk=doc.pk).update(uploaded_at=upload_dt)
-                owner_docs += 1
                 docs_made += 1
-            if owner_docs >= 3:
-                owners_with_3plus.add(owner_id)
+            owners_with_3plus.add(o.id)
 
         self.stdout.write(self.style.SUCCESS(
-            f'✓ Документы: {docs_made} (владельцев с ≥3 доков: {len(owners_with_3plus)})'))
+            f'✓ Документы: {docs_made}, владельцев с документами: {len(owners_with_docs)}, '
+            f'без документов: {len(owners) - len(owners_with_docs)}'))
 
-        # ── 4. Медзаписи (MedicalRecord) ────────────────────────────────────
+        # ── 4. Медзаписи (MedicalRecord) — ровно RECORDS_TARGET ─────────────
+        RECORDS_TARGET = 74
         records_made = 0
-        for pet in pets_created:
-            for _ in range(random.randint(2, 5)):
-                rtype = random.choice(list(RECORD_TEMPLATES.keys()))
-                title = random.choice(RECORD_TEMPLATES[rtype])
+        n_pets = len(pets_created)
+        if n_pets:
+            base = RECORDS_TARGET // n_pets       # минимум на питомца
+            extras = RECORDS_TARGET - base * n_pets  # сколько питомцев получит +1
+            shuffled_pets = list(pets_created)
+            random.shuffle(shuffled_pets)
+            for i, pet in enumerate(shuffled_pets):
+                count = base + (1 if i < extras else 0)
                 joined_date = pet.owner.date_joined.date()
-                rec_date = joined_date + timedelta(
-                    days=random.randint(0, max((end_d - joined_date).days, 0)))
-                rec = MedicalRecord.objects.create(
-                    pet=pet,
-                    created_by=random.choice(vets) if vets else None,
-                    record_type=rtype, title=title,
-                    description=f'Запись по результатам приёма от {rec_date.strftime("%d.%m.%Y")}.',
-                    date=rec_date,
-                )
-                created_dt = random_datetime_in_range(rec_date, end_d, tz)
-                MedicalRecord.objects.filter(pk=rec.pk).update(created_at=created_dt)
-                records_made += 1
+                for _ in range(count):
+                    rtype = random.choice(list(RECORD_TEMPLATES.keys()))
+                    title = random.choice(RECORD_TEMPLATES[rtype])
+                    rec_date = joined_date + timedelta(
+                        days=random.randint(0, max((end_d - joined_date).days, 0)))
+                    rec = MedicalRecord.objects.create(
+                        pet=pet,
+                        created_by=random.choice(vets) if vets else None,
+                        record_type=rtype, title=title,
+                        description=f'Запись по результатам приёма от {rec_date.strftime("%d.%m.%Y")}.',
+                        date=rec_date,
+                    )
+                    created_dt = random_datetime_in_range(rec_date, end_d, tz)
+                    MedicalRecord.objects.filter(pk=rec.pk).update(created_at=created_dt)
+                    records_made += 1
 
-        self.stdout.write(self.style.SUCCESS(f'✓ Медзаписи: {records_made}'))
+        self.stdout.write(self.style.SUCCESS(f'✓ Медзаписи: {records_made} (цель: {RECORDS_TARGET})'))
 
         # ── 5. Статьи блога ─────────────────────────────────────────────────
         if not opts['skip_articles']:
