@@ -1,37 +1,22 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#6c63ff">
 <title>EKM-PET — электронная медкарта вашего питомца</title>
-<meta name="description" content="Сервис для безопасного хранения медицинских документов вашего питомца: прививки, анализы, рецепты и справки в одном месте, всегда под рукой.">
-<meta name="keywords" content="медкарта питомца, ветеринарные документы, электронная карта животного, прививки кошка собака, ветпаспорт онлайн">
+<meta name="description" content="Сервис для безопасного хранения медицинских документов вашего питомца: прививки, анализы, рецепты и справки в одном месте.">
 <meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="EKM-PET — электронная медкарта питомца">
-<meta property="og:description" content="Все документы вашего питомца в одном месте: прививки, анализы, справки. Безопасно, удобно, доступно с любого устройства.">
+<meta property="og:description" content="Все документы вашего питомца в одном месте.">
 <meta property="og:locale" content="ru_RU">
-<link rel="canonical" href="http://kimdanrf.beget.tech/">
 
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%236c63ff'/%3E%3Cg fill='white'%3E%3Cellipse cx='20' cy='24' rx='5.5' ry='7'/%3E%3Cellipse cx='32' cy='18' rx='5.5' ry='7'/%3E%3Cellipse cx='44' cy='24' rx='5.5' ry='7'/%3E%3Cellipse cx='13' cy='38' rx='5' ry='6.5'/%3E%3Cellipse cx='51' cy='38' rx='5' ry='6.5'/%3E%3Cpath d='M32 30c-9 0-16 7-16 14 0 4 3 6 7 6 3 0 6-2 9-2s6 2 9 2c4 0 7-2 7-6 0-7-7-14-16-14z'/%3E%3C/g%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "EKM-PET",
-  "applicationCategory": "HealthApplication",
-  "operatingSystem": "Web",
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "RUB" },
-  "description": "Электронная медицинская карта домашнего животного.",
-  "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "237" }
-}
-</script>
 
 <style>
 :root {
@@ -69,7 +54,7 @@ a:hover { color: var(--primary-dark); }
 
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
 
-/* ──────── HEADER ──────── */
+/* HEADER */
 .topbar {
   position: sticky; top: 0; z-index: 100;
   background: rgba(255,255,255,.85);
@@ -78,11 +63,8 @@ a:hover { color: var(--primary-dark); }
   border-bottom: 1px solid rgba(232,234,240,.6);
 }
 .topbar-inner { display: flex; align-items: center; justify-content: space-between; height: 68px; }
-.logo {
-  display: flex; align-items: center; gap: 10px;
-  font-weight: 800; font-size: 1.18rem; color: var(--primary);
-  letter-spacing: -.5px;
-}
+.logo { display: flex; align-items: center; gap: 10px;
+        font-weight: 800; font-size: 1.18rem; color: var(--primary); letter-spacing: -.5px; }
 .logo-mark {
   width: 36px; height: 36px; border-radius: 10px;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
@@ -90,16 +72,12 @@ a:hover { color: var(--primary-dark); }
   font-size: 1.2rem; box-shadow: var(--shadow-sm);
 }
 .nav { display: flex; align-items: center; gap: 6px; }
-.nav a { color: var(--text); font-weight: 500; padding: 8px 14px; border-radius: 10px;
-         font-size: .94rem; }
+.nav a { color: var(--text); font-weight: 500; padding: 8px 14px; border-radius: 10px; font-size: .94rem; }
 .nav a:hover { background: var(--primary-bg); color: var(--primary); }
 .nav .btn-login { background: var(--primary); color: var(--white); padding: 9px 20px;
                   font-weight: 600; box-shadow: var(--shadow-sm); }
 .nav .btn-login:hover { background: var(--primary-dark); color: var(--white);
                         transform: translateY(-1px); box-shadow: var(--shadow); }
-.nav-toggle { display: none; background: none; border: none; cursor: pointer;
-              width: 40px; height: 40px; align-items: center; justify-content: center;
-              color: var(--text); font-size: 1.4rem; }
 @media (max-width: 768px) {
   .nav .nav-link { display: none; }
   .topbar-inner { height: 60px; }
@@ -107,25 +85,14 @@ a:hover { color: var(--primary-dark); }
   .logo { font-size: 1.05rem; }
 }
 
-/* ──────── HERO ──────── */
-.hero {
-  position: relative; padding: 80px 0 100px;
-  overflow: hidden;
-}
+/* HERO */
+.hero { position: relative; padding: 80px 0 100px; overflow: hidden; }
 .hero::before {
   content: ''; position: absolute; inset: 0; z-index: -1;
   background:
     radial-gradient(800px 500px at 20% 20%, rgba(108,99,255,.18), transparent 60%),
     radial-gradient(700px 500px at 85% 35%, rgba(0,201,167,.13), transparent 60%),
     radial-gradient(500px 400px at 60% 90%, rgba(255,143,177,.12), transparent 60%);
-}
-.hero::after {
-  content: ''; position: absolute; inset: 0; z-index: -1;
-  background-image:
-    radial-gradient(1px 1px at 25% 30%, rgba(108,99,255,.4), transparent),
-    radial-gradient(1px 1px at 75% 60%, rgba(0,201,167,.4), transparent),
-    radial-gradient(1px 1px at 40% 80%, rgba(255,143,177,.4), transparent),
-    radial-gradient(1px 1px at 90% 20%, rgba(108,99,255,.3), transparent);
 }
 .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 60px; align-items: center; }
 .hero-badge {
@@ -135,28 +102,21 @@ a:hover { color: var(--primary-dark); }
   font-size: .82rem; font-weight: 600;
   border: 1px solid rgba(108,99,255,.15);
 }
-.hero h1 {
-  font-size: clamp(2rem, 4.6vw, 3.6rem);
-  font-weight: 900; line-height: 1.05; letter-spacing: -1.5px;
-  margin: 18px 0 22px;
-}
+.hero h1 { font-size: clamp(2rem, 4.6vw, 3.6rem);
+           font-weight: 900; line-height: 1.05; letter-spacing: -1.5px;
+           margin: 18px 0 22px; }
 .hero h1 .accent {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-.hero-lead {
-  font-size: 1.14rem; color: var(--text-muted); max-width: 540px; margin-bottom: 32px;
-}
+.hero-lead { font-size: 1.14rem; color: var(--text-muted); max-width: 540px; margin-bottom: 32px; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 14px 28px; border-radius: 999px;
-  font-weight: 600; font-size: .95rem; font-family: inherit;
-  border: none; cursor: pointer; text-decoration: none;
-  transition: all var(--transition);
-  white-space: nowrap;
-}
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+       padding: 14px 28px; border-radius: 999px;
+       font-weight: 600; font-size: .95rem; font-family: inherit;
+       border: none; cursor: pointer; text-decoration: none;
+       transition: all var(--transition); white-space: nowrap; }
 .btn-primary { background: var(--primary); color: var(--white);
                box-shadow: 0 6px 24px rgba(108,99,255,.32); }
 .btn-primary:hover { background: var(--primary-dark); color: var(--white);
@@ -167,28 +127,7 @@ a:hover { color: var(--primary-dark); }
                    transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 .btn-lg { padding: 16px 34px; font-size: 1rem; }
 
-.hero-trust {
-  display: flex; align-items: center; gap: 18px; margin-top: 28px;
-  color: var(--text-muted); font-size: .88rem;
-}
-.hero-trust .dots { display: flex; }
-.hero-trust .dot {
-  width: 32px; height: 32px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  border: 3px solid var(--white); margin-left: -10px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--white); font-size: .85rem; font-weight: 700;
-}
-.hero-trust .dot:first-child { margin-left: 0; }
-.hero-trust .dot:nth-child(2) { background: linear-gradient(135deg, var(--accent), var(--pink)); }
-.hero-trust .dot:nth-child(3) { background: linear-gradient(135deg, var(--pink), var(--warning)); }
-.hero-trust .dot:nth-child(4) { background: linear-gradient(135deg, var(--warning), var(--primary)); }
-.hero-trust strong { color: var(--text); font-weight: 700; }
-
-/* hero illustration */
-.hero-art {
-  position: relative; aspect-ratio: 1 / 1; max-width: 480px; margin: 0 auto;
-}
+.hero-art { position: relative; aspect-ratio: 1 / 1; max-width: 480px; margin: 0 auto; }
 .hero-art .blob {
   position: absolute; inset: 0; border-radius: 42% 58% 70% 30% / 45% 30% 70% 55%;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
@@ -202,27 +141,15 @@ a:hover { color: var(--primary-dark); }
 .hero-art .stack-card {
   position: absolute; background: var(--white); border-radius: 18px;
   box-shadow: var(--shadow-lg); padding: 18px;
-  border: 1px solid var(--border);
-  width: 280px;
+  border: 1px solid var(--border); width: 280px;
 }
-.hero-art .stack-card.c1 {
-  transform: rotate(-7deg) translate(-30px, -60px);
-  z-index: 1;
-}
-.hero-art .stack-card.c2 {
-  transform: rotate(3deg) translate(40px, 20px);
-  z-index: 3;
-}
-.hero-art .stack-card.c3 {
-  transform: rotate(-2deg) translate(-10px, 110px);
-  z-index: 2;
-}
+.hero-art .stack-card.c1 { transform: rotate(-7deg) translate(-30px, -60px); z-index: 1; }
+.hero-art .stack-card.c2 { transform: rotate(3deg) translate(40px, 20px); z-index: 3; }
+.hero-art .stack-card.c3 { transform: rotate(-2deg) translate(-10px, 110px); z-index: 2; }
 .stack-card .head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.stack-card .avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem;
-}
+.stack-card .avatar { width: 40px; height: 40px; border-radius: 50%;
+                      display: flex; align-items: center; justify-content: center;
+                      font-size: 1.4rem; }
 .stack-card .avatar.dog { background: linear-gradient(135deg, #ffb347, #ff8fb1); }
 .stack-card .avatar.cat { background: linear-gradient(135deg, var(--primary-light), var(--accent)); }
 .stack-card .name { font-weight: 700; }
@@ -232,10 +159,8 @@ a:hover { color: var(--primary-dark); }
   padding: 7px 10px; background: var(--bg); border-radius: 8px; margin-top: 6px;
   font-size: .82rem;
 }
-.stack-card .doc-row .dot {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
-  display: inline-block; margin-right: 8px;
-}
+.stack-card .doc-row .dot { width: 8px; height: 8px; border-radius: 50%;
+                            background: var(--accent); display: inline-block; margin-right: 8px; }
 .stack-card .doc-row .dot.warn { background: var(--warning); }
 .stack-card .doc-row .dot.info { background: var(--primary); }
 
@@ -259,49 +184,37 @@ a:hover { color: var(--primary-dark); }
   .hero-art .stack-card { width: 240px; }
 }
 
-/* ──────── STATS STRIP ──────── */
-.stats {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  padding: 48px 0; color: var(--white); position: relative; overflow: hidden;
-}
+/* STATS */
+.stats { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+         padding: 48px 0; color: var(--white); position: relative; overflow: hidden; }
 .stats::before {
   content: ''; position: absolute; inset: 0;
   background-image: radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.15), transparent),
                     radial-gradient(2px 2px at 70% 60%, rgba(255,255,255,.12), transparent),
                     radial-gradient(2px 2px at 40% 80%, rgba(255,255,255,.18), transparent);
 }
-.stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;
-  position: relative;
-}
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;
+              position: relative; }
 .stat-item { text-align: center; }
-.stat-num {
-  font-size: clamp(2rem, 4vw, 3rem); font-weight: 900;
-  line-height: 1; letter-spacing: -1.5px;
-  background: linear-gradient(135deg, #ffffff 0%, #d6d3ff 100%);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+.stat-num { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900;
+            line-height: 1; letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #d6d3ff 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent; }
 .stat-label { font-size: .9rem; opacity: .85; margin-top: 8px; font-weight: 500; }
 @media (max-width: 700px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; } }
 
-/* ──────── SECTIONS ──────── */
+/* SECTIONS */
 .section { padding: 90px 0; }
 .section-head { text-align: center; max-width: 700px; margin: 0 auto 56px; }
-.section-eyebrow {
-  display: inline-block; color: var(--primary); font-weight: 700;
-  font-size: .82rem; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 14px;
-}
-.section h2 {
-  font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 800; letter-spacing: -1px;
-  line-height: 1.15; margin-bottom: 14px;
-}
+.section-eyebrow { display: inline-block; color: var(--primary); font-weight: 700;
+                   font-size: .82rem; letter-spacing: .15em; text-transform: uppercase; margin-bottom: 14px; }
+.section h2 { font-size: clamp(1.6rem, 3.2vw, 2.4rem); font-weight: 800; letter-spacing: -1px;
+              line-height: 1.15; margin-bottom: 14px; }
 .section-sub { color: var(--text-muted); font-size: 1.05rem; }
 
 /* features */
-.features-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px;
-}
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; }
 .feature {
   background: var(--white); border-radius: var(--radius); padding: 32px 28px;
   border: 1px solid var(--border); box-shadow: var(--shadow-xs);
@@ -311,8 +224,7 @@ a:hover { color: var(--primary-dark); }
   content: ''; position: absolute; top: 0; right: 0;
   width: 140px; height: 140px;
   background: radial-gradient(circle, rgba(108,99,255,.08) 0%, transparent 70%);
-  transform: translate(40%, -40%);
-  transition: transform .4s ease;
+  transform: translate(40%, -40%); transition: transform .4s ease;
 }
 .feature:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: var(--primary-light); }
 .feature:hover::after { transform: translate(20%, -20%); }
@@ -330,51 +242,21 @@ a:hover { color: var(--primary-dark); }
 .feature h3 { font-size: 1.18rem; font-weight: 700; margin-bottom: 10px; position: relative; z-index: 1; }
 .feature p { color: var(--text-muted); font-size: .94rem; position: relative; z-index: 1; }
 
-/* how it works */
-.steps {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; counter-reset: step;
-}
-.step {
-  background: var(--white); border-radius: var(--radius);
-  padding: 36px 28px 28px; border: 1px solid var(--border);
-  position: relative; counter-increment: step;
-}
-.step::before {
-  content: counter(step, decimal-leading-zero);
-  position: absolute; top: 22px; right: 24px;
-  font-size: 2.4rem; font-weight: 900; color: var(--primary-bg);
-  line-height: 1; letter-spacing: -2px;
-}
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; counter-reset: step; }
+.step { background: var(--white); border-radius: var(--radius);
+        padding: 36px 28px 28px; border: 1px solid var(--border);
+        position: relative; counter-increment: step; }
+.step::before { content: counter(step, decimal-leading-zero);
+                position: absolute; top: 22px; right: 24px;
+                font-size: 2.4rem; font-weight: 900; color: var(--primary-bg);
+                line-height: 1; letter-spacing: -2px; }
 .step h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
 .step p { color: var(--text-muted); font-size: .94rem; }
 @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
 
-/* testimonials */
-.testimonials { background: var(--white); }
-.testimonial-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px;
-}
-.testimonial {
-  background: var(--bg); border-radius: var(--radius);
-  padding: 28px; border: 1px solid var(--border);
-  display: flex; flex-direction: column;
-}
-.testimonial .stars { color: var(--warning); font-size: .95rem; margin-bottom: 12px; letter-spacing: 2px; }
-.testimonial p { color: var(--text); font-size: .98rem; flex: 1; margin-bottom: 18px; }
-.testimonial-author { display: flex; align-items: center; gap: 12px; }
-.testimonial-avatar {
-  width: 44px; height: 44px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
-  display: flex; align-items: center; justify-content: center;
-  color: var(--white); font-weight: 700;
-}
-.testimonial-name { font-weight: 700; font-size: .94rem; }
-.testimonial-role { font-size: .82rem; color: var(--text-muted); }
-
 /* CTA */
-.cta-section {
-  padding: 80px 0; position: relative; overflow: hidden;
-}
+.cta-section { padding: 80px 0; position: relative; overflow: hidden; }
 .cta-card {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 130%);
   border-radius: 32px;
@@ -409,11 +291,9 @@ a:hover { color: var(--primary-dark); }
 .footer ul li { margin-bottom: 10px; }
 .footer ul a { color: rgba(255,255,255,.7); font-size: .92rem; }
 .footer ul a:hover { color: var(--white); }
-.footer-bottom {
-  border-top: 1px solid rgba(255,255,255,.1); padding-top: 22px;
-  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
-  font-size: .85rem; color: rgba(255,255,255,.5);
-}
+.footer-bottom { border-top: 1px solid rgba(255,255,255,.1); padding-top: 22px;
+                 display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+                 font-size: .85rem; color: rgba(255,255,255,.5); }
 @media (max-width: 760px) {
   .footer-grid { grid-template-columns: 1fr; gap: 30px; }
   .footer-bottom { flex-direction: column; align-items: flex-start; }
@@ -426,7 +306,6 @@ a:hover { color: var(--primary-dark); }
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="topbar">
   <div class="wrap topbar-inner">
     <a href="/" class="logo">
@@ -436,14 +315,11 @@ a:hover { color: var(--primary-dark); }
     <nav class="nav">
       <a class="nav-link" href="#features">Возможности</a>
       <a class="nav-link" href="#how">Как это работает</a>
-      <a class="nav-link" href="#reviews">Отзывы</a>
-      <a class="nav-link" href="/about/">О проекте</a>
-      <a class="btn-login" href="/accounts/login/">Войти</a>
+      <a class="btn-login" href="{% url 'users:login' %}">Войти</a>
     </nav>
   </div>
 </header>
 
-<!-- HERO -->
 <section class="hero">
   <div class="wrap hero-grid">
     <div class="hero-content reveal">
@@ -454,19 +330,8 @@ a:hover { color: var(--primary-dark); }
         справки, фото жетонов и QR — храните и находите за секунды, открывайте с любого устройства.
       </p>
       <div class="hero-cta">
-        <a href="/accounts/register/" class="btn btn-primary btn-lg">Создать карту питомца</a>
-        <a href="/accounts/login/" class="btn btn-ghost btn-lg">У меня уже есть аккаунт</a>
-      </div>
-      <div class="hero-trust">
-        <div class="dots">
-          <span class="dot">А</span>
-          <span class="dot">М</span>
-          <span class="dot">Д</span>
-          <span class="dot">+</span>
-        </div>
-        <div>
-          <div><strong>237 владельцев</strong> уже хранят документы своих питомцев</div>
-        </div>
+        <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">Создать карту питомца</a>
+        <a href="{% url 'users:login' %}" class="btn btn-ghost btn-lg">У меня уже есть аккаунт</a>
       </div>
     </div>
 
@@ -518,23 +383,33 @@ a:hover { color: var(--primary-dark); }
   </div>
 </section>
 
-<!-- STATS -->
 <section class="stats">
   <div class="wrap stats-grid">
-    <div class="stat-item"><div class="stat-num" data-target="237">0</div><div class="stat-label">владельцев</div></div>
-    <div class="stat-item"><div class="stat-num" data-target="412">0</div><div class="stat-label">питомцев</div></div>
-    <div class="stat-item"><div class="stat-num" data-target="1840">0</div><div class="stat-label">документов</div></div>
-    <div class="stat-item"><div class="stat-num" data-target="100" data-suffix="%">0</div><div class="stat-label">в облаке</div></div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="{{ stats.users }}">0</div>
+      <div class="stat-label">владельцев</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="{{ stats.pets }}">0</div>
+      <div class="stat-label">питомцев</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="{{ stats.docs }}">0</div>
+      <div class="stat-label">документов</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="100" data-suffix="%">0</div>
+      <div class="stat-label">в облаке</div>
+    </div>
   </div>
 </section>
 
-<!-- FEATURES -->
 <section class="section" id="features">
   <div class="wrap">
     <div class="section-head reveal">
       <span class="section-eyebrow">Возможности</span>
       <h2>Всё, что нужно для здоровья питомца</h2>
-      <p class="section-sub">Не теряйте бумажные карты, фотографии анализов в галерее и рецепты в WhatsApp. Соберите всё в одном защищённом месте.</p>
+      <p class="section-sub">Не теряйте бумажные карты, фотографии анализов в галерее и рецепты в чатах. Соберите всё в одном защищённом месте.</p>
     </div>
 
     <div class="features-grid">
@@ -572,7 +447,6 @@ a:hover { color: var(--primary-dark); }
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
 <section class="section" id="how" style="background: var(--white);">
   <div class="wrap">
     <div class="section-head reveal">
@@ -596,63 +470,16 @@ a:hover { color: var(--primary-dark); }
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
-<section class="section testimonials" id="reviews">
-  <div class="wrap">
-    <div class="section-head reveal">
-      <span class="section-eyebrow">Отзывы</span>
-      <h2>Что говорят пользователи</h2>
-    </div>
-    <div class="testimonial-grid">
-      <div class="testimonial reveal">
-        <div class="stars">★★★★★</div>
-        <p>«Перевела все справки и анализы своей кошки в одно приложение. На приёме у врача показываю с телефона — никаких папок и пакетов с бумажками.»</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">АС</div>
-          <div>
-            <div class="testimonial-name">Анна С.</div>
-            <div class="testimonial-role">владелец кошки Симбы</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial reveal">
-        <div class="stars">★★★★★</div>
-        <p>«У моего лабрадора большая история — две операции и регулярные анализы. EKM-PET помог собрать это за один вечер. QR-код повесил на ошейник.»</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">ДП</div>
-          <div>
-            <div class="testimonial-name">Дмитрий П.</div>
-            <div class="testimonial-role">владелец Барсика</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial reveal">
-        <div class="stars">★★★★★</div>
-        <p>«У меня три кошки, и ветеринарных бумажек гора. Очень удобно, что документы привязаны к конкретному питомцу. Поиск работает мгновенно.»</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">ЕМ</div>
-          <div>
-            <div class="testimonial-name">Екатерина М.</div>
-            <div class="testimonial-role">владелец трёх кошек</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
 <section class="cta-section">
   <div class="wrap">
     <div class="cta-card reveal">
       <h2>Начните вести медкарту прямо сейчас</h2>
       <p>Регистрация занимает меньше минуты. Бесплатно, без скрытых платежей.</p>
-      <a href="/accounts/register/" class="btn btn-primary btn-lg">🐾 Создать карту питомца</a>
+      <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">🐾 Создать карту питомца</a>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
 <footer class="footer">
   <div class="wrap">
     <div class="footer-grid">
@@ -665,46 +492,40 @@ a:hover { color: var(--primary-dark); }
         <ul>
           <li><a href="#features">Возможности</a></li>
           <li><a href="#how">Как работает</a></li>
-          <li><a href="/about/">О проекте</a></li>
         </ul>
       </div>
       <div>
         <h4>Юридическая информация</h4>
         <ul>
-          <li><a href="/privacy/">Политика обработки ПД</a></li>
-          <li><a href="/accounts/login/">Войти в кабинет</a></li>
-          <li><a href="/accounts/register/">Регистрация</a></li>
+          <li><a href="{% url 'privacy' %}">Политика обработки ПД</a></li>
+          <li><a href="{% url 'users:login' %}">Войти в кабинет</a></li>
+          <li><a href="{% url 'users:register' %}">Регистрация</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 EKM-PET. Все права защищены.</span>
+      <span>© {% now "Y" %} EKM-PET. Все права защищены.</span>
       <span>Сделано с 🤍 для домашних любимцев</span>
     </div>
   </div>
 </footer>
 
 <script>
-// scroll reveal
 (function() {
   const elements = document.querySelectorAll('.reveal');
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        io.unobserve(e.target);
-      }
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
     });
   }, { threshold: .12 });
   elements.forEach(el => io.observe(el));
 })();
 
-// stat counters
 (function() {
   const nums = document.querySelectorAll('.stat-num');
   const ease = t => 1 - Math.pow(1 - t, 3);
   const animate = (el) => {
-    const target = parseInt(el.dataset.target, 10);
+    const target = parseInt(el.dataset.target, 10) || 0;
     const suffix = el.dataset.suffix || '';
     const duration = 1500;
     const start = performance.now();

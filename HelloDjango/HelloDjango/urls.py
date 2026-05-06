@@ -5,8 +5,10 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
-# vetmis/urls.py
+from core.views import landing_view
+
 urlpatterns = [
+    path('', landing_view, name='landing'),  # главная — лендинг с живыми числами
     path('admin/', admin.site.urls),
     path('accounts/', include('users.urls')),
     path('pets/', include('pets.urls')),
@@ -17,7 +19,7 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls')),
     path('about/', TemplateView.as_view(template_name='core/about.html'), name='about'),
     path('privacy/', TemplateView.as_view(template_name='core/privacy.html'), name='privacy'),
-    path('', include('blog.urls')),
+    path('blog/', include('blog.urls')),
     path('chat/', include('chat.urls')),
     path('services/', include('services.urls')),
 ]
