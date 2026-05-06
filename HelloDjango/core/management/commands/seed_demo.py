@@ -322,6 +322,11 @@ class Command(BaseCommand):
         parser.add_argument('--end', default=None, help='Конец окна (YYYY-MM-DD), по умолчанию — сегодня')
         parser.add_argument('--seed', type=int, default=None, help='Зерно ГСЧ для воспроизводимости')
         parser.add_argument('--skip-articles', action='store_true', help='Не создавать статьи блога')
+        parser.add_argument(
+            '--reset', action='store_true',
+            help='ОПАСНО: перед сидингом удалить ВСЕХ не-суперюзеров и связанные данные '
+                 '(питомцев, документы, медзаписи, статьи). Супер-юзеры и их данные не трогаются.',
+        )
 
     @transaction.atomic
     def handle(self, *args, **opts):
@@ -336,6 +341,19 @@ class Command(BaseCommand):
 
         if opts['seed'] is not None:
             random.seed(opts['seed'])
+
+        # ── 0. Сброс старых данных, если попросили ─────────────────────────
+        if opts['reset']:
+            # Удаляем всех не-суперюзеров. Каскадом снесутся: pets, documents,
+            # medical_records, чаты, авторство статей (на статьях ставится NULL).
+            removed = User.objects.filter(is_superuser=False).delete()
+            self.stdout.write(self.style.WARNING(
+                f'⚠ Сброс: удалено {removed[0]} объектов '
+                f'(пользователи + связанные питомцы / документы / медзаписи).'
+            ))
+            # Удалим осиротевшие статьи, у которых author стал NULL после сброса —
+            # чтобы не было «двух источников» статей.
+            Article.objects.filter(author__isnull=True).delete()
 
         tz = timezone.get_current_timezone()
         password_hash = make_password('Petrov2026!')
