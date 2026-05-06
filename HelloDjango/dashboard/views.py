@@ -1,6 +1,6 @@
 # dashboard/views.py
 # Аналитика считается из реальных моделей: User, Pet, PetDocument, MedicalRecord.
-# Никаких параллельных таблиц с дублированием данных.
+# В проекте сейчас только владельцы питомцев (собаки и кошки).
 
 import csv
 from datetime import timedelta
@@ -13,7 +13,6 @@ from django.utils import timezone
 
 from users.models import User
 from pets.models import Pet, PetDocument
-from clinics.models import Clinic
 from medical_records.models import MedicalRecord
 
 
@@ -22,45 +21,35 @@ def _build_stats(days: int = 30) -> dict:
     now = timezone.now()
     period_start = (now - timedelta(days=days)).date()
 
-    users_qs = User.objects.all()
+    users_qs = User.objects.filter(is_superuser=False)  # супер-юзеров не считаем
     pets_qs = Pet.objects.all()
     docs_qs = PetDocument.objects.all()
     records_qs = MedicalRecord.objects.all()
 
-    # Аннотируем каждого пользователя количеством документов его питомцев.
     users_with_doc_counts = users_qs.annotate(
         docs_count=Count('pets__documents', distinct=True),
         pets_count=Count('pets', distinct=True),
     )
 
     total_users = users_qs.count()
-    owners = users_qs.filter(user_type='owner').count()
-    vets = users_qs.filter(user_type='vet').count()
-    clinic_admins = users_qs.filter(user_type='clinic_admin').count()
-
     new_users_period = users_qs.filter(date_joined__gte=period_start).count()
-
-    # «Активные» = заходили или хоть что-то делали в окне периода.
     active_users = users_qs.filter(
         Q(last_login__gte=period_start) | Q(date_joined__gte=period_start)
     ).count()
 
     total_pets = pets_qs.count()
+    dogs = pets_qs.filter(species='dog').count()
+    cats = pets_qs.filter(species='cat').count()
+
     total_docs = docs_qs.count()
     total_records = records_qs.count()
-    total_clinics = Clinic.objects.count()
 
+    users_with_pets = users_with_doc_counts.filter(pets_count__gt=0).count()
     users_with_3plus_docs = users_with_doc_counts.filter(docs_count__gte=3).count()
     users_with_no_docs = users_with_doc_counts.filter(docs_count=0).count()
-    avg_docs_per_user = round(total_docs / total_users, 2) if total_users else 0
-
-    # Распределение по виду питомцев
-    species_distribution = list(
-        pets_qs.values('species').annotate(count=Count('id')).order_by('-count')
+    avg_docs_per_user_with_pets = (
+        round(total_docs / users_with_pets, 2) if users_with_pets else 0
     )
-    species_map = dict(Pet.SPECIES_CHOICES)
-    for row in species_distribution:
-        row['label'] = species_map.get(row['species'], row['species'])
 
     # Распределение документов по категориям
     category_distribution = list(
@@ -84,11 +73,18 @@ def _build_stats(days: int = 30) -> dict:
         if r['day'] is not None
     ]
 
-    # Топ-10 пользователей по числу документов (для таблицы в дашборде)
+    # Породы — топ-7 (объединённый список собак и кошек)
+    breed_distribution = list(
+        pets_qs.exclude(breed='').values('breed', 'species')
+        .annotate(count=Count('id')).order_by('-count')[:7]
+    )
+
+    # Топ-10 пользователей по числу документов
     top_users = list(
         users_with_doc_counts.filter(docs_count__gt=0)
         .order_by('-docs_count')[:10]
-        .values('id', 'username', 'first_name', 'last_name', 'email', 'user_type', 'docs_count', 'pets_count', 'date_joined')
+        .values('id', 'username', 'first_name', 'last_name', 'email',
+                'docs_count', 'pets_count', 'date_joined')
     )
 
     return {
@@ -96,22 +92,21 @@ def _build_stats(days: int = 30) -> dict:
         'period_start': period_start,
         'totals': {
             'users': total_users,
-            'owners': owners,
-            'vets': vets,
-            'clinic_admins': clinic_admins,
-            'pets': total_pets,
-            'docs': total_docs,
-            'records': total_records,
-            'clinics': total_clinics,
             'new_users_period': new_users_period,
             'active_users': active_users,
+            'pets': total_pets,
+            'dogs': dogs,
+            'cats': cats,
+            'docs': total_docs,
+            'records': total_records,
+            'users_with_pets': users_with_pets,
             'users_with_3plus_docs': users_with_3plus_docs,
             'users_with_no_docs': users_with_no_docs,
-            'avg_docs_per_user': avg_docs_per_user,
+            'avg_docs_per_user_with_pets': avg_docs_per_user_with_pets,
         },
-        'species_distribution': species_distribution,
         'category_distribution': category_distribution,
         'daily_registrations': daily_registrations,
+        'breed_distribution': breed_distribution,
         'top_users': top_users,
     }
 
@@ -146,11 +141,11 @@ def export_csv(request):
 
     writer = csv.writer(response, delimiter=';')
     writer.writerow([
-        'ID', 'Логин', 'Имя', 'Фамилия', 'Email', 'Роль',
+        'ID', 'Логин', 'Имя', 'Фамилия', 'Email',
         'Питомцев', 'Документов', 'Дата регистрации', 'Последний вход',
     ])
 
-    qs = User.objects.annotate(
+    qs = User.objects.filter(is_superuser=False).annotate(
         docs_count=Count('pets__documents', distinct=True),
         pets_count=Count('pets', distinct=True),
     ).order_by('-date_joined')
@@ -162,7 +157,6 @@ def export_csv(request):
             u.first_name,
             u.last_name,
             u.email,
-            u.get_user_type_display() if hasattr(u, 'get_user_type_display') else '',
             u.pets_count,
             u.docs_count,
             u.date_joined.strftime('%d.%m.%Y %H:%M') if u.date_joined else '',

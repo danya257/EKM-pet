@@ -368,13 +368,13 @@
   <!-- Шапка -->
   <header class="topbar">
     <div class="topbar-inner">
-      <a href="{% url 'blog:home' %}" class="logo">
+      <a href="/" class="logo">
         <span class="logo-paw">🐾</span>EKM-PET
       </a>
       <div class="topbar-actions">
-        <a href="{% url 'about' %}" class="icon-btn hide-mobile" title="О проекте">ℹ️</a>
+        <a href="/" class="icon-btn hide-mobile" title="На главную">🏠</a>
         {% if user.is_authenticated %}
-          <a href="{% url 'pets:pet_list' %}" class="icon-btn" title="Питомцы">🐶</a>
+          <a href="{% url 'pets:pet_list' %}" class="icon-btn" title="Мои питомцы">🐶</a>
           <a href="{% url 'users:profile' %}" class="icon-btn" title="Профиль">👤</a>
         {% else %}
           <a href="{% url 'users:login' %}" class="btn btn-sm">Войти</a>
@@ -397,11 +397,11 @@
         🐾 <strong>EKM-PET</strong> — электронная медкарта домашних животных
       </p>
       <p>
+        <a href="/">Главная</a>
+        &nbsp;·&nbsp;
         <a href="{% url 'about' %}">О проекте</a>
         &nbsp;·&nbsp;
         <a href="{% url 'privacy' %}">Политика обработки ПД</a>
-        &nbsp;·&nbsp;
-        <a href="{% url 'clinics:clinic_list_public' %}">Клиники</a>
       </p>
       <p class="text-xs mt-2">© {% now "Y" %} EKM-PET. Все права защищены.</p>
     </footer>
@@ -410,21 +410,13 @@
   <!-- Нижняя навигация (мобильная) -->
   {% if user.is_authenticated %}
   <nav class="bottom-nav" aria-label="Навигация">
-    <a href="{% url 'blog:home' %}" id="nav-home">
+    <a href="/" id="nav-home">
       <span class="nav-icon">🏠</span>
       <span>Главная</span>
     </a>
     <a href="{% url 'pets:pet_list' %}" id="nav-pets">
       <span class="nav-icon">🐾</span>
       <span>Питомцы</span>
-    </a>
-    <a href="{% url 'clinics:clinic_list_public' %}" id="nav-clinics">
-      <span class="nav-icon">🏥</span>
-      <span>Клиники</span>
-    </a>
-    <a href="{% url 'chat:chat_list' %}" id="nav-chat">
-      <span class="nav-icon">💬</span>
-      <span>Чаты</span>
     </a>
     <a href="{% url 'users:profile' %}" id="nav-profile">
       <span class="nav-icon">👤</span>
@@ -433,13 +425,9 @@
   </nav>
   {% else %}
   <nav class="bottom-nav" aria-label="Навигация">
-    <a href="{% url 'blog:home' %}">
+    <a href="/">
       <span class="nav-icon">🏠</span>
       <span>Главная</span>
-    </a>
-    <a href="{% url 'clinics:clinic_list_public' %}">
-      <span class="nav-icon">🏥</span>
-      <span>Клиники</span>
     </a>
     <a href="{% url 'users:login' %}">
       <span class="nav-icon">🔑</span>

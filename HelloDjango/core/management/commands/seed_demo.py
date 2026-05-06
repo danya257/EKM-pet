@@ -1,20 +1,17 @@
 """
-Сидер реалистичных данных для EKM-PET.
+Сидер реалистичных данных для EKM-PET (только владельцы, собаки и кошки).
 
 Создаёт:
-  • ~32 пользователя с русскими именами, правдоподобными логинами, реальными
-    провайдерами почты, регистрациями в окне 22.04.2026 — сегодня;
-  • 7 ветеринарных клиник Москвы и Санкт-Петербурга с адресами, рейтингами,
-    часами работы и привязанными ветеринарами/админами;
-  • Услуги клиник (приём, вакцинация, УЗИ, операции, груминг и т.д.);
-  • Питомцев у 14 владельцев (1–3 на хозяина), с чипами у части собак/кошек;
+  • ~32 пользователя — все владельцы, с русскими именами, правдоподобными
+    логинами и реальными провайдерами почты, регистрациями в окне 22.04.2026 — сегодня;
+  • Питомцев у 14 владельцев (1–3 на хозяина), только собаки и кошки,
+    с чипами у большинства;
   • Документы в личных кабинетах (PDF — реальные, по умолчанию);
   • Медицинские записи (диагнозы, прививки, процедуры, анализы);
-  • Статьи в блоге (про уход за питомцами);
-  • Чаты владельцев с ветеринарами и сообщения в них.
+  • Статьи в блоге (про уход за питомцами).
 
 Запуск:
-    python manage.py seed_demo                # 32 юзера, реальные PDF
+    python manage.py seed_demo                # 32 владельца, реальные PDF
     python manage.py seed_demo --users 40     # больше юзеров
     python manage.py seed_demo --no-files     # без PDF (быстрее, для теста)
 """
@@ -32,10 +29,7 @@ from django.utils.text import slugify
 from users.models import User
 from pets.models import Pet, PetDocument
 from medical_records.models import MedicalRecord
-from clinics.models import Clinic
-from services.models import Service
 from blog.models import Article
-from chat.models import Chat, Message
 
 
 # ── Имена / фамилии ───────────────────────────────────────────────────────────
@@ -101,114 +95,12 @@ PET_NAMES = ['Барсик', 'Мурка', 'Рекс', 'Шарик', 'Жучка
 
 BREEDS = {
     'dog': ['Лабрадор', 'Немецкая овчарка', 'Хаски', 'Корги', 'Такса', 'Мопс',
-            'Дворняжка', 'Шпиц', 'Йорк', 'Бигль', 'Чихуахуа', 'Стаффорд'],
+            'Дворняжка', 'Шпиц', 'Йорк', 'Бигль', 'Чихуахуа', 'Стаффорд',
+            'Золотистый ретривер', 'Французский бульдог', 'Метис'],
     'cat': ['Британская', 'Шотландская вислоухая', 'Сфинкс', 'Мейн-кун',
-            'Сибирская', 'Беспородная', 'Бенгальская', 'Метис'],
-    'bird': ['Волнистый попугай', 'Канарейка', 'Корелла', 'Жако'],
-    'rodent': ['Хомяк джунгарский', 'Морская свинка', 'Декоративная крыса', 'Шиншилла'],
-    'rabbit': ['Карликовый', 'Декоративный', 'Вислоухий баран'],
-    'reptile': ['Эублефар', 'Красноухая черепаха', 'Бородатая агама'],
-    'other': ['Хорёк', 'Ёж африканский'],
+            'Сибирская', 'Беспородная', 'Бенгальская', 'Метис', 'Невская маскарадная'],
 }
-SPECIES_WEIGHTS = [('dog', 38), ('cat', 38), ('bird', 7), ('rodent', 6),
-                   ('rabbit', 5), ('reptile', 4), ('other', 2)]
-
-
-# ── Клиники ────────────────────────────────────────────────────────────────────
-CLINICS_DATA = [
-    {
-        'name': 'ВетЦентр «Лапа Друга»',
-        'city': 'Москва',
-        'address': 'ул. Профсоюзная, д. 47, корп. 2',
-        'phone': '+7 (495) 234-56-78',
-        'email': 'info@lapadruga.ru',
-        'website': 'https://lapadruga.example.ru',
-        'description': 'Многопрофильная ветеринарная клиника полного цикла. Работаем с 2010 года. Принимаем собак, кошек и экзотических животных. Современное оборудование, опытные врачи, своя лаборатория.',
-        'working_hours': 'Пн–Пт 9:00–22:00, Сб–Вс 10:00–20:00',
-        'rating': '4.85',
-    },
-    {
-        'name': 'Ветеринарная клиника «Айболит-24»',
-        'city': 'Москва',
-        'address': 'Ленинский проспект, д. 99',
-        'phone': '+7 (495) 778-12-43',
-        'email': 'help@aibolit24.ru',
-        'website': 'https://aibolit24.example.ru',
-        'description': 'Круглосуточная ветеринарная помощь. Стационар, операционная, УЗИ, рентген, анестезиология. Скорая ветеринарная помощь с выездом на дом.',
-        'working_hours': '24 часа, без выходных',
-        'rating': '4.92',
-    },
-    {
-        'name': 'Зооцентр «Беги, барсик!»',
-        'city': 'Москва',
-        'address': 'ул. Дмитрия Ульянова, д. 12',
-        'phone': '+7 (495) 122-90-15',
-        'email': 'mail@begibarsik.ru',
-        'website': '',
-        'description': 'Семейная клиника для домашних питомцев. Терапия, вакцинация, стоматология, груминг. Бережное отношение к каждому пациенту.',
-        'working_hours': 'Пн–Вс 9:00–21:00',
-        'rating': '4.71',
-    },
-    {
-        'name': 'Клиника «Доктор Зверев»',
-        'city': 'Санкт-Петербург',
-        'address': 'Невский пр., д. 138',
-        'phone': '+7 (812) 333-45-67',
-        'email': 'spb@zverev-vet.ru',
-        'website': 'https://zverev-vet.example.ru',
-        'description': 'Современная клиника на Невском. Хирургия, кардиология, дерматология, эндокринология. Принимаем по записи и по острой необходимости.',
-        'working_hours': 'Пн–Пт 8:00–23:00, Сб–Вс 10:00–22:00',
-        'rating': '4.78',
-    },
-    {
-        'name': 'Ветстанция «Котопёс»',
-        'city': 'Санкт-Петербург',
-        'address': 'Большой пр. П.С., д. 70',
-        'phone': '+7 (812) 901-22-30',
-        'email': 'hello@kotopes-spb.ru',
-        'website': '',
-        'description': 'Специализируемся на кошках и собаках. Терапия, профилактика, чипирование, паспорта международного образца. Записывайтесь онлайн.',
-        'working_hours': 'Пн–Сб 9:00–21:00, Вс выходной',
-        'rating': '4.66',
-    },
-    {
-        'name': 'ВетКлиника «Зоодоктор»',
-        'city': 'Казань',
-        'address': 'ул. Баумана, д. 44',
-        'phone': '+7 (843) 567-89-01',
-        'email': 'info@zoodoctor-kzn.ru',
-        'website': 'https://zoodoctor-kzn.example.ru',
-        'description': 'Лидер ветеринарной медицины в Татарстане. Уникальная команда: 12 врачей-специалистов. Лечение домашних, экзотических и сельскохозяйственных животных.',
-        'working_hours': 'Пн–Вс 8:00–22:00',
-        'rating': '4.81',
-    },
-    {
-        'name': 'Ветпомощь «Друг»',
-        'city': 'Екатеринбург',
-        'address': 'ул. Малышева, д. 105',
-        'phone': '+7 (343) 222-11-09',
-        'email': 'mail@drug-vet.ru',
-        'website': '',
-        'description': 'Ветеринарная клиника в центре города. Удобная парковка, отдельные кабинеты для кошек и собак. Программы поддержки пожилых питомцев.',
-        'working_hours': 'Пн–Пт 9:00–21:00, Сб 10:00–18:00',
-        'rating': '4.63',
-    },
-]
-
-SERVICE_TEMPLATES = [
-    ('Первичный приём врача-терапевта', 'Осмотр, сбор анамнеза, рекомендации.', 1500),
-    ('Повторный приём', 'Контрольный осмотр после лечения.', 800),
-    ('Комплексная вакцинация (собаки)', 'Вакцина «Нобивак» + от бешенства, паспорт.', 2500),
-    ('Комплексная вакцинация (кошки)', 'Вакцина «Мультифел-4» + от бешенства.', 2300),
-    ('УЗИ брюшной полости', 'С заключением врача УЗД.', 2200),
-    ('Общий анализ крови', 'Гематологический анализатор, расшифровка.', 950),
-    ('Биохимия крови (12 показателей)', 'АЛТ, АСТ, креатинин, мочевина и др.', 2100),
-    ('Кастрация / стерилизация', 'Включая наркоз и шов.', 5500),
-    ('Чистка зубов ультразвуком', 'С наркозом и осмотром стоматолога.', 4500),
-    ('Чипирование', 'Установка ISO-чипа, регистрация в базе.', 1800),
-    ('Груминг (стрижка)', 'Полная стрижка с купанием.', 3200),
-    ('Стационар (сутки)', 'Уход и наблюдение, медикаменты по схеме.', 2500),
-]
+SPECIES_WEIGHTS = [('dog', 50), ('cat', 50)]
 
 
 # ── Документы / медзаписи / статьи / чаты ─────────────────────────────────────
@@ -350,43 +242,6 @@ ARTICLES = [
     },
 ]
 
-CHAT_DIALOGUES = [
-    [
-        ('owner', 'Добрый день! Хотела записаться на приём с моей кошкой, ей 3 года.'),
-        ('vet', 'Здравствуйте! Подскажите причину визита и удобное время.'),
-        ('owner', 'Уже второй день не ест и вялая. Когда у вас есть свободное окно?'),
-        ('vet', 'Сегодня в 17:00 могу принять. Возьмите ветпаспорт и предыдущие анализы, если есть.'),
-        ('owner', 'Хорошо, буду к 17. Спасибо!'),
-    ],
-    [
-        ('owner', 'Здравствуйте! Через неделю плановая вакцинация у щенка. Что нужно сделать заранее?'),
-        ('vet', 'Здравствуйте. За 10 дней до прививки — дегельминтизация. После — карантин 14 дней.'),
-        ('owner', 'Подскажите препарат и дозировку?'),
-        ('vet', 'Мильбемакс по весу. Если щенок 5 кг — половина таблетки. Утром натощак.'),
-        ('owner', 'Поняла, спасибо!'),
-    ],
-    [
-        ('owner', 'Подскажите, по результатам анализа крови всё в порядке?'),
-        ('vet', 'Посмотрел, в целом норма. Лейкоциты на верхней границе — может быть из-за стресса. Контроль через 2 недели.'),
-        ('owner', 'Спасибо! Записать на повторный приём?'),
-        ('vet', 'Запишитесь у администратора, я посмотрю динамику.'),
-    ],
-    [
-        ('owner', 'Барсик чешется, у основания хвоста залысины. Что это может быть?'),
-        ('vet', 'Похоже на блошиный дерматит или пищевую аллергию. Нужен очный осмотр и соскоб.'),
-        ('owner', 'Можем сегодня?'),
-        ('vet', 'Да, есть окно в 19:00.'),
-    ],
-    [
-        ('owner', 'У собаки начались проблемы с зубами, плохой запах изо рта.'),
-        ('vet', 'Возможно зубной камень. Рекомендую профессиональную чистку ультразвуком.'),
-        ('owner', 'Сколько стоит и как долго длится процедура?'),
-        ('vet', 'Около 4500 руб., с наркозом — 1.5 часа, плюс восстановление 2 часа.'),
-        ('owner', 'Хорошо, давайте запишемся.'),
-    ],
-]
-
-
 # ── Утилиты ──────────────────────────────────────────────────────────────────
 def fake_pdf_bytes(title: str, body: str) -> bytes:
     """Минимальный валидный PDF без сторонних зависимостей."""
@@ -466,9 +321,7 @@ class Command(BaseCommand):
         parser.add_argument('--start', default='2026-04-22', help='Начало окна регистраций (YYYY-MM-DD)')
         parser.add_argument('--end', default=None, help='Конец окна (YYYY-MM-DD), по умолчанию — сегодня')
         parser.add_argument('--seed', type=int, default=None, help='Зерно ГСЧ для воспроизводимости')
-        parser.add_argument('--skip-clinics', action='store_true', help='Не пересоздавать клиники')
         parser.add_argument('--skip-articles', action='store_true', help='Не создавать статьи блога')
-        parser.add_argument('--skip-chats', action='store_true', help='Не создавать чаты')
 
     @transaction.atomic
     def handle(self, *args, **opts):
@@ -488,11 +341,11 @@ class Command(BaseCommand):
         password_hash = make_password('Petrov2026!')
         created_pdfs = not opts['no_files']
 
-        # ── 1. Пользователи ─────────────────────────────────────────────────
+        # ── 1. Пользователи (только владельцы) ──────────────────────────────
         n_users = opts['users']
-        n_owners = max(int(n_users * 0.78), 14)
-        n_vets = max(int(n_users * 0.16), 4)  # минимум 4 вета — для чатов и клиник
-        n_admins = max(n_users - n_owners - n_vets, 2)
+        n_owners = n_users
+        n_vets = 0
+        n_admins = 0
 
         existing_usernames = set(User.objects.values_list('username', flat=True))
         existing_emails = set(User.objects.values_list('email', flat=True))
@@ -544,66 +397,19 @@ class Command(BaseCommand):
             return user
 
         owners = [build_user('owner', i + 1) for i in range(n_owners)]
-        vets = [build_user('vet', i + 1) for i in range(n_vets)]
-        admins = [build_user('clinic_admin', i + 1) for i in range(n_admins)]
-        new_users = owners + vets + admins
+        new_users = owners
         User.objects.bulk_create(new_users)
-
         owners = list(User.objects.filter(username__in=[u.username for u in owners]))
-        vets = list(User.objects.filter(username__in=[u.username for u in vets]))
-        admins = list(User.objects.filter(username__in=[u.username for u in admins]))
+
+        # vets — только существующие в БД (если есть), для авторства медзаписей и статей
+        vets = list(User.objects.filter(user_type='vet'))
 
         self.stdout.write(self.style.SUCCESS(
-            f'✓ Пользователи: {len(new_users)} '
-            f'(владельцев={len(owners)}, ветеринаров={len(vets)}, админов={len(admins)}). '
-            f'Окно: {start_d.strftime("%d.%m.%Y")} — {end_d.strftime("%d.%m.%Y")}.'
+            f'✓ Владельцев питомцев создано: {len(new_users)}. '
+            f'Окно регистрации: {start_d.strftime("%d.%m.%Y")} — {end_d.strftime("%d.%m.%Y")}.'
         ))
 
-        # ── 2. Клиники + услуги + назначение админов/ветов ───────────────────
-        clinics = []
-        if not opts['skip_clinics']:
-            existing_clinic_names = set(Clinic.objects.values_list('name', flat=True))
-            for cd in CLINICS_DATA:
-                if cd['name'] in existing_clinic_names:
-                    continue
-                c = Clinic.objects.create(
-                    name=cd['name'], city=cd['city'], address=cd['address'],
-                    phone=cd['phone'], email=cd['email'], website=cd['website'],
-                    description=cd['description'], working_hours=cd['working_hours'],
-                    rating=cd['rating'],
-                )
-                # Поправим created_at в окно публикации сайта
-                cdate = random_datetime_in_range(start_d, end_d, tz)
-                Clinic.objects.filter(pk=c.pk).update(created_at=cdate)
-                clinics.append(c)
-
-            # Привязываем админов и ветеринаров к клиникам
-            staff_pool = list(admins) + list(vets)
-            random.shuffle(staff_pool)
-            for i, c in enumerate(clinics):
-                # 1–2 админа и 1–3 вета на клинику
-                pickers = staff_pool[i * 2 % max(len(staff_pool), 1):][:random.randint(2, 4)]
-                if not pickers:
-                    pickers = random.sample(staff_pool, min(3, len(staff_pool))) if staff_pool else []
-                if pickers:
-                    c.admins.add(*pickers)
-
-            # Услуги: 4–7 услуг на клинику
-            services_made = 0
-            for c in clinics:
-                chosen = random.sample(SERVICE_TEMPLATES, k=min(random.randint(4, 7), len(SERVICE_TEMPLATES)))
-                for name, descr, price in chosen:
-                    # Лёгкая вариация цен (±15%)
-                    p = round(price * random.uniform(0.85, 1.15), 0)
-                    Service.objects.create(clinic=c, name=name, description=descr, price=p)
-                    services_made += 1
-
-            self.stdout.write(self.style.SUCCESS(
-                f'✓ Клиники: {len(clinics)} (с {services_made} услугами)'))
-        else:
-            clinics = list(Clinic.objects.all())
-
-        # ── 3. Питомцы ──────────────────────────────────────────────────────
+        # ── 2. Питомцы (только собаки и кошки) ──────────────────────────────
         owners_with_pets = owners[:14]
         all_pets_to_create = []
         for o in owners_with_pets:
@@ -611,7 +417,7 @@ class Command(BaseCommand):
                 species = weighted_choice(SPECIES_WEIGHTS)
                 breed = random.choice(BREEDS[species])
                 age_days = random.randint(180, 4500)
-                chip = gen_chip() if species in ('dog', 'cat') and random.random() < 0.6 else None
+                chip = gen_chip() if random.random() < 0.6 else None
                 # Уникальность chip_number — проверим коллизии
                 if chip and Pet.objects.filter(chip_number=chip).exists():
                     chip = None
@@ -643,7 +449,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'✓ Питомцы: {len(pets_created)}'))
 
-        # ── 4. Документы (PetDocument) ──────────────────────────────────────
+        # ── 3. Документы (PetDocument) ──────────────────────────────────────
         docs_made = 0
         owners_with_3plus = set()
         templates = doc_titles()
@@ -685,7 +491,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f'✓ Документы: {docs_made} (владельцев с ≥3 доков: {len(owners_with_3plus)})'))
 
-        # ── 5. Медзаписи (MedicalRecord) ────────────────────────────────────
+        # ── 4. Медзаписи (MedicalRecord) ────────────────────────────────────
         records_made = 0
         for pet in pets_created:
             for _ in range(random.randint(2, 5)):
@@ -707,13 +513,13 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'✓ Медзаписи: {records_made}'))
 
-        # ── 6. Статьи блога ─────────────────────────────────────────────────
+        # ── 5. Статьи блога ─────────────────────────────────────────────────
         if not opts['skip_articles']:
             existing_slugs = set(Article.objects.values_list('slug', flat=True))
             articles_made = 0
             for art_data in ARTICLES:
                 slug = make_unique_slug(art_data['title'], existing_slugs)
-                author = random.choice(vets) if vets else (admins[0] if admins else None)
+                author = random.choice(vets) if vets else None
                 a = Article.objects.create(
                     title=art_data['title'], slug=slug, content=art_data['content'],
                     author=author, is_published=True,
@@ -722,50 +528,6 @@ class Command(BaseCommand):
                 Article.objects.filter(pk=a.pk).update(published_at=pub_dt)
                 articles_made += 1
             self.stdout.write(self.style.SUCCESS(f'✓ Статьи блога: {articles_made}'))
-
-        # ── 7. Чаты + сообщения ─────────────────────────────────────────────
-        if not opts['skip_chats'] and clinics and vets and owners_with_pets:
-            chats_made = 0
-            messages_made = 0
-            used_pairs = set()  # уникальная тройка (owner, vet, clinic)
-            for dialogue in CHAT_DIALOGUES:
-                # Подбираем (owner, vet, clinic) без коллизий
-                attempts = 0
-                while attempts < 20:
-                    o = random.choice(owners_with_pets)
-                    v = random.choice(vets)
-                    c = random.choice(clinics)
-                    key = (o.id, v.id, c.id)
-                    if key not in used_pairs:
-                        used_pairs.add(key)
-                        break
-                    attempts += 1
-                else:
-                    continue
-
-                pet = next((p for p in pets_created if p.owner_id == o.id), None)
-                chat = Chat.objects.create(owner=o, vet=v, clinic=c, pet=pet)
-                # created_at для чата — в окне регистрации владельца
-                chat_start = random_datetime_in_range(o.date_joined.date(), end_d, tz)
-                Chat.objects.filter(pk=chat.pk).update(created_at=chat_start)
-
-                # Сообщения с нарастающими таймстемпами
-                msg_time = chat_start
-                for who, text in dialogue:
-                    sender = o if who == 'owner' else v
-                    m = Message.objects.create(chat=chat, sender=sender, text=text,
-                                               is_read=(random.random() < 0.85))
-                    msg_time = msg_time + timedelta(minutes=random.randint(2, 90))
-                    if msg_time > timezone.make_aware(
-                            datetime.combine(end_d, dt_time(23, 59)), tz):
-                        msg_time = timezone.make_aware(
-                            datetime.combine(end_d, dt_time(random.randint(9, 22),
-                                                            random.randint(0, 59))), tz)
-                    Message.objects.filter(pk=m.pk).update(timestamp=msg_time)
-                    messages_made += 1
-                chats_made += 1
-            self.stdout.write(self.style.SUCCESS(
-                f'✓ Чаты: {chats_made} (с {messages_made} сообщениями)'))
 
         # ── Финал ──────────────────────────────────────────────────────────
         self.stdout.write('')

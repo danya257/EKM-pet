@@ -59,12 +59,12 @@
   <div class="metric-card">
     <div class="label">Питомцев</div>
     <div class="value">{{ stats.totals.pets }}</div>
-    <div class="sub">всего в системе</div>
+    <div class="sub">собак: {{ stats.totals.dogs }} · кошек: {{ stats.totals.cats }}</div>
   </div>
   <div class="metric-card metric-accent">
     <div class="label">Документов в ЛК</div>
     <div class="value">{{ stats.totals.docs }}</div>
-    <div class="sub">в среднем {{ stats.totals.avg_docs_per_user }} на юзера</div>
+    <div class="sub">в среднем {{ stats.totals.avg_docs_per_user_with_pets }} на владельца</div>
   </div>
   <div class="metric-card metric-success">
     <div class="label">≥ 3 документов</div>
@@ -82,9 +82,9 @@
     <div class="sub">в карточках питомцев</div>
   </div>
   <div class="metric-card">
-    <div class="label">Клиник</div>
-    <div class="value">{{ stats.totals.clinics }}</div>
-    <div class="sub">подключено</div>
+    <div class="label">С питомцами</div>
+    <div class="value">{{ stats.totals.users_with_pets }}</div>
+    <div class="sub">пользователей</div>
   </div>
 </div>
 
@@ -94,19 +94,19 @@
     <div class="chart-canvas-wrap"><canvas id="regChart"></canvas></div>
   </div>
   <div class="chart-box">
-    <h3>Роли пользователей</h3>
-    <div class="chart-canvas-wrap"><canvas id="rolesChart"></canvas></div>
+    <h3>Собаки vs Кошки</h3>
+    <div class="chart-canvas-wrap"><canvas id="speciesChart"></canvas></div>
   </div>
 </div>
 
 <div class="charts-row">
   <div class="chart-box">
-    <h3>Питомцы по видам</h3>
-    <div class="chart-canvas-wrap"><canvas id="speciesChart"></canvas></div>
-  </div>
-  <div class="chart-box">
     <h3>Документы по категориям</h3>
     <div class="chart-canvas-wrap"><canvas id="categoriesChart"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <h3>Топ пород</h3>
+    <div class="chart-canvas-wrap"><canvas id="breedsChart"></canvas></div>
   </div>
 </div>
 
@@ -121,7 +121,6 @@
           <th>#</th>
           <th>Пользователь</th>
           <th>Email</th>
-          <th>Роль</th>
           <th>Питомцев</th>
           <th>Документов</th>
           <th>Регистрация</th>
@@ -133,13 +132,12 @@
           <td>{{ forloop.counter }}</td>
           <td><strong>{{ u.first_name }} {{ u.last_name }}</strong><br><span class="text-xs text-muted">@{{ u.username }}</span></td>
           <td class="text-sm">{{ u.email }}</td>
-          <td><span class="badge badge-primary">{{ u.user_type }}</span></td>
           <td>{{ u.pets_count }}</td>
           <td><strong class="text-primary">{{ u.docs_count }}</strong></td>
           <td class="text-sm">{{ u.date_joined|date:"d.m.Y" }}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="7" class="text-center text-muted" style="padding:30px;">Нет данных. Запустите <code>python manage.py seed_demo</code>.</td></tr>
+        <tr><td colspan="6" class="text-center text-muted" style="padding:30px;">Нет данных. Запустите <code>python manage.py seed_demo</code>.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -147,8 +145,8 @@
 </div>
 
 {{ stats.daily_registrations|json_script:"daily-data" }}
-{{ stats.species_distribution|json_script:"species-data" }}
 {{ stats.category_distribution|json_script:"category-data" }}
+{{ stats.breed_distribution|json_script:"breed-data" }}
 {{ stats.totals|json_script:"totals-data" }}
 
 <script>
@@ -156,15 +154,15 @@
   const PRIMARY = '#6c63ff';
   const ACCENT = '#00c9a7';
   const WARNING = '#ffb347';
-  const DANGER = '#ff5c7c';
-  const PALETTE = [PRIMARY, ACCENT, WARNING, DANGER, '#5a52d5', '#8b85ff', '#00a88c', '#6b7280'];
+  const PINK = '#ff8fb1';
+  const PALETTE = [PRIMARY, ACCENT, WARNING, PINK, '#5a52d5', '#8b85ff', '#00a88c', '#6b7280'];
 
   Chart.defaults.font.family = "Inter, -apple-system, sans-serif";
   Chart.defaults.color = '#6b7280';
 
   const daily = JSON.parse(document.getElementById('daily-data').textContent);
-  const species = JSON.parse(document.getElementById('species-data').textContent);
   const categories = JSON.parse(document.getElementById('category-data').textContent);
+  const breeds = JSON.parse(document.getElementById('breed-data').textContent);
   const totals = JSON.parse(document.getElementById('totals-data').textContent);
 
   // Регистрации по дням
@@ -191,37 +189,18 @@
     }
   });
 
-  // Роли пользователей (donut)
-  new Chart(document.getElementById('rolesChart'), {
+  // Собаки vs Кошки
+  new Chart(document.getElementById('speciesChart'), {
     type: 'doughnut',
     data: {
-      labels: ['Владельцы', 'Ветеринары', 'Админы клиник'],
+      labels: ['🐕 Собаки', '🐈 Кошки'],
       datasets: [{
-        data: [totals.owners, totals.vets, totals.clinic_admins],
-        backgroundColor: [PRIMARY, ACCENT, WARNING],
+        data: [totals.dogs, totals.cats],
+        backgroundColor: [PRIMARY, ACCENT],
         borderWidth: 0,
       }]
     },
     options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
-  });
-
-  // Виды питомцев
-  new Chart(document.getElementById('speciesChart'), {
-    type: 'bar',
-    data: {
-      labels: species.map(s => s.label),
-      datasets: [{
-        label: 'Питомцев',
-        data: species.map(s => s.count),
-        backgroundColor: PALETTE,
-        borderRadius: 8,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-    }
   });
 
   // Категории документов
@@ -236,6 +215,26 @@
       }]
     },
     options: { responsive: true, maintainAspectRatio: false }
+  });
+
+  // Топ пород
+  new Chart(document.getElementById('breedsChart'), {
+    type: 'bar',
+    data: {
+      labels: breeds.map(b => b.breed),
+      datasets: [{
+        label: 'Питомцев',
+        data: breeds.map(b => b.count),
+        backgroundColor: breeds.map(b => b.species === 'dog' ? PRIMARY : ACCENT),
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
   });
 })();
 </script>
