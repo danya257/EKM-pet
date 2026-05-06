@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% block title %}Аналитика — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .metric-card { background: var(--card-bg); border-radius: var(--radius); border: 1px solid var(--border); padding: 18px; box-shadow: var(--shadow-sm); }
+  .metric-card .label { font-size: .78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+  .metric-card .value { font-size: 1.9rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+  .metric-card .sub { font-size: .8rem; color: var(--text-muted); margin-top: 4px; }
+  .metric-accent .value { color: var(--primary); }
+  .metric-success .value { color: var(--accent); }
+  .metric-warning .value { color: var(--warning); }
+  .charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .chart-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); }
+  .chart-box h3 { margin-bottom: 14px; }
+  .chart-canvas-wrap { position: relative; height: 260px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+  .filters .field { margin: 0; }
+  .filters select { padding: 8px 12px; }
+  @media (max-width: 600px) {
+    .metric-card .value { font-size: 1.5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+  <h1 style="margin-bottom:0;">📊 Аналитика пользователей</h1>
+  <a href="{% url 'dashboard:export_csv' %}" class="btn btn-ghost btn-sm">⬇ Выгрузить CSV</a>
+</div>
+<p class="text-muted mb-3">Период: последние {{ stats.period_days }} дн. (с {{ stats.period_start|date:"d.m.Y" }})</p>
+
+<form method="get" class="filters">
+  <div class="field">
+    <label for="days">Окно</label>
+    <select name="days" id="days" onchange="this.form.submit()">
+      <option value="7" {% if days == 7 %}selected{% endif %}>7 дней</option>
+      <option value="14" {% if days == 14 %}selected{% endif %}>14 дней</option>
+      <option value="30" {% if days == 30 %}selected{% endif %}>30 дней</option>
+      <option value="90" {% if days == 90 %}selected{% endif %}>90 дней</option>
+      <option value="365" {% if days == 365 %}selected{% endif %}>Год</option>
+    </select>
+  </div>
+</form>
+
+<div class="metrics-grid">
+  <div class="metric-card metric-accent">
+    <div class="label">Всего пользователей</div>
+    <div class="value">{{ stats.totals.users }}</div>
+    <div class="sub">+{{ stats.totals.new_users_period }} за период</div>
+  </div>
+  <div class="metric-card metric-success">
+    <div class="label">Активные</div>
+    <div class="value">{{ stats.totals.active_users }}</div>
+    <div class="sub">логин/регистрация в окне</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Питомцев</div>
+    <div class="value">{{ stats.totals.pets }}</div>
+    <div class="sub">всего в системе</div>
+  </div>
+  <div class="metric-card metric-accent">
+    <div class="label">Документов в ЛК</div>
+    <div class="value">{{ stats.totals.docs }}</div>
+    <div class="sub">в среднем {{ stats.totals.avg_docs_per_user }} на юзера</div>
+  </div>
+  <div class="metric-card metric-success">
+    <div class="label">≥ 3 документов</div>
+    <div class="value">{{ stats.totals.users_with_3plus_docs }}</div>
+    <div class="sub">пользователей</div>
+  </div>
+  <div class="metric-card metric-warning">
+    <div class="label">Без документов</div>
+    <div class="value">{{ stats.totals.users_with_no_docs }}</div>
+    <div class="sub">пользователей</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Медзаписей</div>
+    <div class="value">{{ stats.totals.records }}</div>
+    <div class="sub">в карточках питомцев</div>
+  </div>
+  <div class="metric-card">
+    <div class="label">Клиник</div>
+    <div class="value">{{ stats.totals.clinics }}</div>
+    <div class="sub">подключено</div>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-box">
+    <h3>Регистрации по дням</h3>
+    <div class="chart-canvas-wrap"><canvas id="regChart"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <h3>Роли пользователей</h3>
+    <div class="chart-canvas-wrap"><canvas id="rolesChart"></canvas></div>
+  </div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-box">
+    <h3>Питомцы по видам</h3>
+    <div class="chart-canvas-wrap"><canvas id="speciesChart"></canvas></div>
+  </div>
+  <div class="chart-box">
+    <h3>Документы по категориям</h3>
+    <div class="chart-canvas-wrap"><canvas id="categoriesChart"></canvas></div>
+  </div>
+</div>
+
+<div class="card card-flush">
+  <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+    <h3 style="margin:0;">Топ-10 активных пользователей</h3>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Пользователь</th>
+          <th>Email</th>
+          <th>Роль</th>
+          <th>Питомцев</th>
+          <th>Документов</th>
+          <th>Регистрация</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in stats.top_users %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td><strong>{{ u.first_name }} {{ u.last_name }}</strong><br><span class="text-xs text-muted">@{{ u.username }}</span></td>
+          <td class="text-sm">{{ u.email }}</td>
+          <td><span class="badge badge-primary">{{ u.user_type }}</span></td>
+          <td>{{ u.pets_count }}</td>
+          <td><strong class="text-primary">{{ u.docs_count }}</strong></td>
+          <td class="text-sm">{{ u.date_joined|date:"d.m.Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center text-muted" style="padding:30px;">Нет данных. Запустите <code>python manage.py seed_demo</code>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{{ stats.daily_registrations|json_script:"daily-data" }}
+{{ stats.species_distribution|json_script:"species-data" }}
+{{ stats.category_distribution|json_script:"category-data" }}
+{{ stats.totals|json_script:"totals-data" }}
+
+<script>
+(function() {
+  const PRIMARY = '#6c63ff';
+  const ACCENT = '#00c9a7';
+  const WARNING = '#ffb347';
+  const DANGER = '#ff5c7c';
+  const PALETTE = [PRIMARY, ACCENT, WARNING, DANGER, '#5a52d5', '#8b85ff', '#00a88c', '#6b7280'];
+
+  Chart.defaults.font.family = "Inter, -apple-system, sans-serif";
+  Chart.defaults.color = '#6b7280';
+
+  const daily = JSON.parse(document.getElementById('daily-data').textContent);
+  const species = JSON.parse(document.getElementById('species-data').textContent);
+  const categories = JSON.parse(document.getElementById('category-data').textContent);
+  const totals = JSON.parse(document.getElementById('totals-data').textContent);
+
+  // Регистрации по дням
+  new Chart(document.getElementById('regChart'), {
+    type: 'line',
+    data: {
+      labels: daily.map(d => d.date),
+      datasets: [{
+        label: 'Новые пользователи',
+        data: daily.map(d => d.count),
+        borderColor: PRIMARY,
+        backgroundColor: 'rgba(108,99,255,.12)',
+        borderWidth: 2.5,
+        fill: true,
+        tension: .35,
+        pointRadius: 4,
+        pointBackgroundColor: PRIMARY,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  // Роли пользователей (donut)
+  new Chart(document.getElementById('rolesChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Владельцы', 'Ветеринары', 'Админы клиник'],
+      datasets: [{
+        data: [totals.owners, totals.vets, totals.clinic_admins],
+        backgroundColor: [PRIMARY, ACCENT, WARNING],
+        borderWidth: 0,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '60%' }
+  });
+
+  // Виды питомцев
+  new Chart(document.getElementById('speciesChart'), {
+    type: 'bar',
+    data: {
+      labels: species.map(s => s.label),
+      datasets: [{
+        label: 'Питомцев',
+        data: species.map(s => s.count),
+        backgroundColor: PALETTE,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+    }
+  });
+
+  // Категории документов
+  new Chart(document.getElementById('categoriesChart'), {
+    type: 'pie',
+    data: {
+      labels: categories.map(c => c.label),
+      datasets: [{
+        data: categories.map(c => c.count),
+        backgroundColor: PALETTE,
+        borderWidth: 0,
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
+})();
+</script>
+{% endblock %}

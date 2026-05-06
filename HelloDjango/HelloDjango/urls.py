@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 # vetmis/urls.py
 urlpatterns = [
@@ -13,6 +14,9 @@ urlpatterns = [
     path('records/', include('medical_records.urls')),
     path('api/', include('api.urls')),
     path('core/', include('core.urls')),
+    path('dashboard/', include('dashboard.urls')),
+    path('about/', TemplateView.as_view(template_name='core/about.html'), name='about'),
+    path('privacy/', TemplateView.as_view(template_name='core/privacy.html'), name='privacy'),
     path('', include('blog.urls')),
     path('chat/', include('chat.urls')),
     path('services/', include('services.urls')),

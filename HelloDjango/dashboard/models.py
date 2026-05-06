@@ -1,3 +1,3 @@
-from django.db import models
-
-# Create your models here.
+# dashboard/models.py
+# Дашборд считает статистику из реальных моделей (User, Pet, PetDocument, MedicalRecord),
+# собственные таблицы не нужны.

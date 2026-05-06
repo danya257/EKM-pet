@@ -1,3 +1,2 @@
-from django.contrib import admin
-
-# Register your models here.
+# dashboard/admin.py
+# Дашборд использует только стандартные модели; собственные регистрации не нужны.
