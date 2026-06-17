@@ -56,6 +56,10 @@
   .record-dot.vaccination { background: var(--accent); }
   .record-dot.diagnosis   { background: var(--danger); }
   .record-dot.procedure   { background: var(--warning); }
+  .record-dot.surgery     { background: var(--danger); }
+  .record-dot.lab_test    { background: var(--primary); }
+  .record-dot.medication  { background: var(--primary-light); }
+  .record-dot.note        { background: var(--gray); }
   .record-dot.other       { background: var(--gray); }
   .record-title { font-weight: 600; font-size: .92rem; margin-bottom: 2px; }
   .record-meta  { font-size: .78rem; color: var(--text-muted); }
@@ -92,6 +96,20 @@
   }
   .info-cell-label { font-size: .72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
   .info-cell-value { font-size: .92rem; font-weight: 600; }
+
+  /* Ссылка удаления — второстепенная, не красная заливка */
+  .btn-delete-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 50px;
+    font-size: .82rem; font-weight: 500;
+    color: var(--text-muted); background: transparent;
+    text-decoration: none; transition: all var(--transition);
+    margin-left: auto;
+  }
+  .btn-delete-link:hover {
+    color: var(--danger); background: #fff0f3;
+    text-decoration: none;
+  }
 
   /* QR */
   .qr-section { text-align: center; padding: 8px 0; }
@@ -132,21 +150,27 @@
   <div class="card">
     <div class="info-grid">
       <div class="info-cell">
-        <div class="info-cell-label">Дата рождения</div>
-        <div class="info-cell-value">{{ pet.birth_date|date:"d.m.Y"|default:"—" }}</div>
-      </div>
-      <div class="info-cell">
-        <div class="info-cell-label">Номер чипа</div>
-        <div class="info-cell-value">{{ pet.chip_number|default:"—" }}</div>
-      </div>
-      <div class="info-cell">
         <div class="info-cell-label">Вид</div>
         <div class="info-cell-value">{{ pet.get_species_display }}</div>
       </div>
+      {% if pet.breed %}
       <div class="info-cell">
         <div class="info-cell-label">Порода</div>
-        <div class="info-cell-value">{{ pet.breed|default:"—" }}</div>
+        <div class="info-cell-value">{{ pet.breed }}</div>
       </div>
+      {% endif %}
+      {% if pet.birth_date %}
+      <div class="info-cell">
+        <div class="info-cell-label">Дата рождения</div>
+        <div class="info-cell-value">{{ pet.birth_date|date:"d.m.Y" }}</div>
+      </div>
+      {% endif %}
+      {% if pet.chip_number %}
+      <div class="info-cell">
+        <div class="info-cell-label">Номер чипа</div>
+        <div class="info-cell-value">{{ pet.chip_number }}</div>
+      </div>
+      {% endif %}
     </div>
     {% if pet.photo %}
       <div class="mt-3">
@@ -154,9 +178,8 @@
       </div>
     {% endif %}
   </div>
-  <div class="flex gap-2 flex-wrap">
-    <a href="{% url 'pets:pet_edit' pet.pk %}" class="btn btn-ghost flex-1">✏️ Редактировать</a>
-    <a href="{% url 'pets:pet_delete' pet.pk %}" class="btn btn-danger flex-1">🗑 Удалить</a>
+  <div class="flex justify-between items-center">
+    <a href="{% url 'pets:pet_delete' pet.pk %}" class="btn-delete-link" title="Удалить питомца">🗑 Удалить</a>
   </div>
 </div>
 
@@ -194,7 +217,7 @@
 </div>
 
 <!-- Документы -->
-<div class="tab-panel" id="tab-docs" id="documents">
+<div class="tab-panel" id="tab-docs">
   <div class="flex justify-between items-center mb-3">
     <h2 class="mb-0">Документы</h2>
     <a href="{% url 'pets:doc_add' pet_pk=pet.pk %}" class="btn btn-sm">+ Загрузить</a>

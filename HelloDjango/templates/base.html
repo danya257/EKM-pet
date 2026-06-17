@@ -445,20 +445,19 @@
     (function() {
       const path = window.location.pathname;
       const map = {
-        '/': 'nav-home',
-        '/blog/': 'nav-home',
         '/pets/': 'nav-pets',
-        '/clinics/': 'nav-clinics',
-        '/chat/': 'nav-chat',
         '/accounts/profile/': 'nav-profile',
       };
       for (const [prefix, id] of Object.entries(map)) {
-        if (path.startsWith(prefix) && prefix !== '/') {
+        if (path.startsWith(prefix)) {
           const el = document.getElementById(id);
           if (el) el.classList.add('active');
-          break;
+          return;
         }
       }
+      // Главная — по умолчанию
+      const home = document.getElementById('nav-home');
+      if (home && path === '/') home.classList.add('active');
     })();
   </script>
   {% block extra_js %}{% endblock %}

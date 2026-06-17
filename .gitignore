@@ -29,3 +29,8 @@ db.sqlite3
 /media
 /staticfiles
 /static
+
+# Secrets
+.env
+.env.local
+*.env

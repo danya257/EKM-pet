@@ -22,7 +22,9 @@ class PetListView(LoginRequiredMixin, ListView):
     context_object_name = 'pets'
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.user_type != 'owner':
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if getattr(request.user, 'user_type', None) != 'owner':
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
 

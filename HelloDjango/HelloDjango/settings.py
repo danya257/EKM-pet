@@ -9,28 +9,46 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Загрузить .env (рядом с manage.py), если есть. На проде значения
+# обычно проставлены через окружение хостинга — но .env работает и там.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / '.env')
+except ImportError:
+    pass
+
 # =============================================================================
 # SECURITY SETTINGS (PRODUCTION)
 # =============================================================================
 
-# ⚠️ ВНИМАНИЕ: Сгенерируйте новый ключ! 
-# Старый ключ скомпрометирован, так как был показан в чате.
-# Команда для генерации: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-CHANGE-THIS-KEY-IN-PRODUCTION-please-generate-new-one')
+# Все секреты — через переменные окружения. См. .env.example
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise RuntimeError(
+        'DJANGO_SECRET_KEY не задан. Положите его в .env или окружение.'
+    )
 
-# На продакшене отключаем отладку
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
-# Разрешенные хосты - добавьте сюда все ваши домены
 ALLOWED_HOSTS = [
     'kimdanrf.beget.tech',
     'www.kimdanrf.beget.tech',
     'localhost',
     '127.0.0.1',
-    # Если будет свой домен:
-    # 'ваш-домен.ru',
-    # 'www.ваш-домен.ru',
 ]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://kimdanrf.beget.tech',
+    'https://www.kimdanrf.beget.tech',
+]
+
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
 
 # =============================================================================
 # APPLICATION DEFINITION
@@ -102,17 +120,18 @@ WSGI_APPLICATION = 'HelloDjango.passenger_wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'kimdanrf_dj1',           # Имя БД из панели Beget
-        'USER': 'kimdanrf_dj1',           # Пользователь БД из панели Beget
-        'PASSWORD': 'u7BtyOUi',          # Пароль от БД из панели Beget
-        'HOST': 'localhost',              # На Beget MySQL всегда на localhost
-        'PORT': '3306',                   # Стандартный порт MySQL
+        'NAME':     os.getenv('DB_NAME', 'kimdanrf_dj1'),
+        'USER':     os.getenv('DB_USER', 'kimdanrf_dj1'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST':     os.getenv('DB_HOST', 'localhost'),
+        'PORT':     os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',         # Поддержка эмодзи и кириллицы
+            'charset': 'utf8mb4',
         },
-        'CONN_MAX_AGE': 600, 
-        'CONN_HEALTH_CHECKS': True,# Keep-alive соединение (опционально)
+        # Beget MySQL рвёт соединение по wait_timeout — короче чем 600.
+        'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '30')),
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
