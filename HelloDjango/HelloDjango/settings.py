@@ -79,6 +79,8 @@ INSTALLED_APPS = [
     'chat',
     'services',
     'dashboard',
+    'reviews',
+    'appointments',
     # 'vetmis',
 ]
 
@@ -117,23 +119,31 @@ WSGI_APPLICATION = 'HelloDjango.passenger_wsgi.application'
 # DATABASE SETTINGS (Beget MySQL)
 # =============================================================================
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME':     os.getenv('DB_NAME', 'kimdanrf_dj1'),
-        'USER':     os.getenv('DB_USER', 'kimdanrf_dj1'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST':     os.getenv('DB_HOST', 'localhost'),
-        'PORT':     os.getenv('DB_PORT', '3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-        },
-        # Beget MySQL рвёт соединение по wait_timeout — короче чем 600.
-        'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '30')),
-        'CONN_HEALTH_CHECKS': True,
+if os.getenv('DB_ENGINE', 'mysql') == 'sqlite':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME':     os.getenv('DB_NAME', 'kimdanrf_dj1'),
+            'USER':     os.getenv('DB_USER', 'kimdanrf_dj1'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST':     os.getenv('DB_HOST', 'localhost'),
+            'PORT':     os.getenv('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
+            # Beget MySQL рвёт соединение по wait_timeout — короче чем 600.
+            'CONN_MAX_AGE': int(os.getenv('DB_CONN_MAX_AGE', '30')),
+            'CONN_HEALTH_CHECKS': True,
+        }
+    }
 
 # Используем pymysql как замену mysqlclient
 import pymysql

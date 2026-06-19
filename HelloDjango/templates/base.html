@@ -372,8 +372,10 @@
         <span class="logo-paw">🐾</span>EKM-PET
       </a>
       <div class="topbar-actions">
-        <a href="/" class="icon-btn hide-mobile" title="На главную">🏠</a>
+        <a href="{% url 'clinics:public_clinic_list' %}" class="icon-btn hide-mobile" title="Каталог клиник">🏥</a>
+        <a href="{% url 'clinics:public_vet_list' %}" class="icon-btn hide-mobile" title="Каталог врачей">👨‍⚕️</a>
         {% if user.is_authenticated %}
+          <a href="{% url 'appointments:list' %}" class="icon-btn" title="Мои записи">📅</a>
           <a href="{% url 'pets:pet_list' %}" class="icon-btn" title="Мои питомцы">🐶</a>
           <a href="{% url 'users:profile' %}" class="icon-btn" title="Профиль">👤</a>
         {% else %}
@@ -414,6 +416,14 @@
       <span class="nav-icon">🏠</span>
       <span>Главная</span>
     </a>
+    <a href="{% url 'clinics:public_vet_list' %}" id="nav-catalog">
+      <span class="nav-icon">🔍</span>
+      <span>Каталог</span>
+    </a>
+    <a href="{% url 'appointments:list' %}" id="nav-appts">
+      <span class="nav-icon">📅</span>
+      <span>Записи</span>
+    </a>
     <a href="{% url 'pets:pet_list' %}" id="nav-pets">
       <span class="nav-icon">🐾</span>
       <span>Питомцы</span>
@@ -425,9 +435,13 @@
   </nav>
   {% else %}
   <nav class="bottom-nav" aria-label="Навигация">
-    <a href="/">
+    <a href="/" id="nav-home">
       <span class="nav-icon">🏠</span>
       <span>Главная</span>
+    </a>
+    <a href="{% url 'clinics:public_vet_list' %}" id="nav-catalog">
+      <span class="nav-icon">🔍</span>
+      <span>Каталог</span>
     </a>
     <a href="{% url 'users:login' %}">
       <span class="nav-icon">🔑</span>
@@ -446,6 +460,8 @@
       const path = window.location.pathname;
       const map = {
         '/pets/': 'nav-pets',
+        '/clinics/': 'nav-catalog',
+        '/appointments/': 'nav-appts',
         '/accounts/profile/': 'nav-profile',
       };
       for (const [prefix, id] of Object.entries(map)) {

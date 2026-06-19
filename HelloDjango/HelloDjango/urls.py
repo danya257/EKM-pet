@@ -22,6 +22,8 @@ urlpatterns = [
     path('blog/', include('blog.urls')),
     path('chat/', include('chat.urls')),
     path('services/', include('services.urls')),
+    path('reviews/', include('reviews.urls')),
+    path('appointments/', include('appointments.urls')),
 ]
 
 handler400 = 'django.views.defaults.bad_request'

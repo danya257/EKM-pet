@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Мои записи — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .appt-card {
+    display: flex; gap: 12px; padding: 14px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-sm);
+    margin-bottom: 10px; text-decoration: none; color: inherit;
+  }
+  .appt-card:hover { box-shadow: var(--shadow); text-decoration: none; color: inherit; }
+  .appt-date {
+    background: var(--primary-bg); border-radius: var(--radius-sm);
+    padding: 10px 14px; text-align: center; min-width: 70px;
+  }
+  .appt-date .day { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); }
+  .appt-date .mon { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; }
+  .appt-info { flex: 1; }
+  .appt-status {
+    display: inline-block; padding: 3px 10px; border-radius: 50px;
+    font-size: .72rem; font-weight: 700;
+  }
+  .st-new      { background: #fffbeb; color: #92400e; }
+  .st-confirmed{ background: #e6faf6; color: #0a7a6a; }
+  .st-done     { background: var(--gray-light); color: var(--text-muted); }
+  .st-cancelled{ background: #fff0f3; color: #c0143c; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>📅 Мои записи</h1>
+
+{% if appointments %}
+  {% for appt in appointments %}
+    <a class="appt-card" href="{{ appt.get_absolute_url }}">
+      <div class="appt-date">
+        <div class="day">{{ appt.scheduled_at|date:"d" }}</div>
+        <div class="mon">{{ appt.scheduled_at|date:"M" }}</div>
+      </div>
+      <div class="appt-info">
+        <div style="font-weight:700">{{ appt.vet.display_name }}</div>
+        <div class="text-muted text-sm">{{ appt.scheduled_at|date:"H:i" }} · {{ appt.get_kind_display }}{% if appt.clinic %} · {{ appt.clinic.name }}{% endif %}</div>
+        {% if appt.pet %}<div class="text-sm">🐾 {{ appt.pet.name }}</div>{% endif %}
+        <span class="appt-status st-{{ appt.status }}">{{ appt.get_status_display }}</span>
+      </div>
+    </a>
+  {% endfor %}
+{% else %}
+  <div class="card text-center" style="padding:40px 20px">
+    <div style="font-size:3rem;margin-bottom:12px">📅</div>
+    <h3>Записей пока нет</h3>
+    <p class="text-muted">Найдите врача в каталоге и запишитесь на приём</p>
+    <a href="{% url 'clinics:public_vet_list' %}" class="btn mt-3">Найти врача</a>
+  </div>
+{% endif %}
+{% endblock %}

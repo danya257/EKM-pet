@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Запись к {{ vet.display_name }} — EKM-PET{% endblock %}
+
+{% block content %}
+<a href="{{ vet.get_absolute_url }}" class="text-muted text-sm" style="text-decoration:none">← Назад в карточку врача</a>
+
+<div class="card mt-2" style="background:linear-gradient(135deg,#6c63ff,#00c9a7);color:white;border:none">
+  <div style="display:flex;gap:14px;align-items:center">
+    <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;overflow:hidden">
+      {% if vet.photo %}<img src="{{ vet.photo.url }}" alt="" style="width:100%;height:100%;object-fit:cover">{% else %}{{ vet.display_name|slice:":1" }}{% endif %}
+    </div>
+    <div>
+      <h2 style="color:white;margin:0;font-size:1.15rem">{{ vet.display_name }}</h2>
+      {% if vet.clinic %}<div style="font-size:.85rem;opacity:.9">🏥 {{ vet.clinic.name }}</div>{% endif %}
+      <div style="font-size:.85rem;opacity:.85;margin-top:2px">от {{ vet.price_consultation|floatformat:0 }} ₽</div>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="card">
+  {% csrf_token %}
+
+  <div class="field">
+    <label for="{{ form.pet.id_for_label }}">Питомец</label>
+    {{ form.pet }}
+    <div class="field-hint">Не обязательно — можно указать на приёме</div>
+  </div>
+
+  <div class="field">
+    <label for="{{ form.service.id_for_label }}">Услуга</label>
+    {{ form.service }}
+  </div>
+
+  <div class="field">
+    <label for="{{ form.scheduled_at.id_for_label }}">Желаемая дата и время</label>
+    {{ form.scheduled_at }}
+    {% if form.scheduled_at.errors %}<div class="field-error">{{ form.scheduled_at.errors|join:" " }}</div>{% endif %}
+  </div>
+
+  <div class="field">
+    <label for="{{ form.kind.id_for_label }}">Формат</label>
+    {{ form.kind }}
+  </div>
+
+  <div class="field">
+    <label for="{{ form.reason.id_for_label }}">Что беспокоит</label>
+    {{ form.reason }}
+  </div>
+
+  <div class="field">
+    <label for="{{ form.contact_phone.id_for_label }}">Телефон для связи</label>
+    {{ form.contact_phone }}
+  </div>
+
+  <button type="submit" class="btn btn-block btn-lg">📅 Отправить заявку</button>
+  <p class="text-muted text-sm text-center mt-2">Заявка не подтверждает запись — врач/клиника свяжется с вами для согласования.</p>
+</form>
+{% endblock %}

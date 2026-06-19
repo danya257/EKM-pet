@@ -9,16 +9,17 @@ from django.urls import reverse_lazy
 from django.contrib.auth import login
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.db.models import Count
+from django.db.models import Count, Q, Prefetch
 from django.utils import timezone
 
 from users.models import User
-from .models import Clinic
+from .models import Clinic, Specialization, VetProfile
 from .forms import ClinicForm
 from services.models import Service, ServiceAssignment
 from pets.models import Pet
 from medical_records.models import MedicalRecord
 from chat.models import Message
+from reviews.models import Review
 
 
 # === Dashboard для клиник ===
@@ -66,14 +67,6 @@ class ClinicDashboardView(LoginRequiredMixin, TemplateView):
             })
 
         return context
-
-
-# === Публичный каталог ===
-class PublicClinicListView(ListView):
-    model = Clinic
-    template_name = 'clinics/clinic_list_public.html'
-    context_object_name = 'clinics'
-    ordering = ['name']
 
 
 # === Управление клиниками (личный кабинет) ===
@@ -240,6 +233,8 @@ class VetDetailView(LoginRequiredMixin, DetailView):
         assignments = ServiceAssignment.objects.filter(vet=vet)
         context['assignments'] = assignments
         return context
+
+
 class ServiceDetailView(LoginRequiredMixin, DetailView):
     model = Service
     template_name = 'clinics/service_detail.html'
@@ -249,33 +244,57 @@ class ServiceDetailView(LoginRequiredMixin, DetailView):
         service = self.get_object()
         if request.user not in service.clinic.admins.all():
             raise PermissionDenied("Доступ запрещён")
-        return super().dispatch(request, *args, **kwargs)    
-# clinics/views.py
-class PublicClinicDetailView(DetailView):
-    model = Clinic
-    template_name = 'clinics/clinic_detail_public.html'
-    context_object_name = 'clinic'
-    
-# clinics/views.py
-from django.db.models import Q
+        return super().dispatch(request, *args, **kwargs)
+
+
+# =========================================================================
+#  ПУБЛИЧНЫЙ КАТАЛОГ — клиники и врачи (аналог «ПроДокторов» для вет)
+# =========================================================================
 
 class PublicClinicListView(ListView):
     model = Clinic
     template_name = 'clinics/clinic_list_public.html'
     context_object_name = 'clinics'
+    paginate_by = 12
 
     def get_queryset(self):
-        queryset = Clinic.objects.all()
-        q = self.request.GET.get('q')
-        city = self.request.GET.get('city')
+        qs = Clinic.objects.all().prefetch_related('services')
+        params = self.request.GET
+
+        q = params.get('q', '').strip()
         if q:
-            queryset = queryset.filter(
+            qs = qs.filter(
                 Q(name__icontains=q) |
-                Q(services__name__icontains=q)
-            ).distinct()
+                Q(services__name__icontains=q) |
+                Q(vets__specializations__name__icontains=q)
+            )
+
+        city = params.get('city', '').strip()
         if city:
-            queryset = queryset.filter(city__iexact=city)
-        return queryset.order_by('name')
+            qs = qs.filter(city__iexact=city)
+
+        spec_slug = params.get('spec', '').strip()
+        if spec_slug:
+            qs = qs.filter(vets__specializations__slug=spec_slug)
+
+        if params.get('online'):
+            qs = qs.filter(accepts_online=True)
+        if params.get('h24'):
+            qs = qs.filter(is_24h=True)
+        if params.get('surgery'):
+            qs = qs.filter(has_surgery=True)
+        if params.get('lab'):
+            qs = qs.filter(has_lab=True)
+
+        sort = params.get('sort', 'rating')
+        if sort == 'rating':
+            qs = qs.order_by('-rating', '-reviews_count', 'name')
+        elif sort == 'reviews':
+            qs = qs.order_by('-reviews_count', '-rating', 'name')
+        else:
+            qs = qs.order_by('name')
+
+        return qs.distinct()
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -285,5 +304,124 @@ class PublicClinicListView(ListView):
             .distinct()
             .order_by('city')
         )
+        ctx['specs'] = Specialization.objects.all()
+        ctx['filters'] = self.request.GET
         ctx['selected_city'] = self.request.GET.get('city', '')
+        ctx['selected_spec'] = self.request.GET.get('spec', '')
+        ctx['q'] = self.request.GET.get('q', '')
+        ctx['sort'] = self.request.GET.get('sort', 'rating')
+        return ctx
+
+
+class PublicClinicDetailView(DetailView):
+    model = Clinic
+    template_name = 'clinics/clinic_detail_public.html'
+    context_object_name = 'clinic'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        clinic = self.object
+        ctx['vets'] = (
+            VetProfile.objects.filter(clinic=clinic, is_published=True)
+            .select_related('user')
+            .prefetch_related('specializations')
+        )
+        ctx['services'] = clinic.services.all().order_by('name')
+        ctx['reviews'] = (
+            Review.objects.filter(clinic=clinic, is_published=True)
+            .select_related('author')[:20]
+        )
+        return ctx
+
+
+class PublicVetListView(ListView):
+    model = VetProfile
+    template_name = 'clinics/vet_list_public.html'
+    context_object_name = 'vets'
+    paginate_by = 16
+
+    def get_queryset(self):
+        qs = (
+            VetProfile.objects.filter(is_published=True)
+            .select_related('user', 'clinic')
+            .prefetch_related('specializations')
+        )
+        params = self.request.GET
+
+        q = params.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(user__first_name__icontains=q) |
+                Q(user__last_name__icontains=q) |
+                Q(specializations__name__icontains=q) |
+                Q(clinic__name__icontains=q)
+            )
+
+        spec_slug = params.get('spec', '').strip()
+        if spec_slug:
+            qs = qs.filter(specializations__slug=spec_slug)
+
+        city = params.get('city', '').strip()
+        if city:
+            qs = qs.filter(clinic__city__iexact=city)
+
+        if params.get('online'):
+            qs = qs.filter(accepts_online=True)
+        if params.get('house_call'):
+            qs = qs.filter(accepts_house_call=True)
+
+        price_max = params.get('price_max')
+        if price_max and price_max.isdigit():
+            qs = qs.filter(price_consultation__lte=int(price_max))
+
+        sort = params.get('sort', 'rating')
+        if sort == 'price':
+            qs = qs.order_by('price_consultation', '-rating')
+        elif sort == 'experience':
+            qs = qs.order_by('-experience_years', '-rating')
+        else:
+            qs = qs.order_by('-rating', '-reviews_count')
+
+        return qs.distinct()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['specs'] = Specialization.objects.all()
+        ctx['cities'] = (
+            Clinic.objects.exclude(city='')
+            .values_list('city', flat=True)
+            .distinct()
+            .order_by('city')
+        )
+        ctx['filters'] = self.request.GET
+        ctx['selected_spec'] = self.request.GET.get('spec', '')
+        ctx['selected_city'] = self.request.GET.get('city', '')
+        ctx['q'] = self.request.GET.get('q', '')
+        ctx['sort'] = self.request.GET.get('sort', 'rating')
+        return ctx
+
+
+class PublicVetDetailView(DetailView):
+    model = VetProfile
+    template_name = 'clinics/vet_detail_public.html'
+    context_object_name = 'vet'
+
+    def get_queryset(self):
+        return (
+            VetProfile.objects.filter(is_published=True)
+            .select_related('user', 'clinic')
+            .prefetch_related('specializations')
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        vet = self.object
+        ctx['services'] = (
+            Service.objects.filter(clinic=vet.clinic).order_by('name')
+            if vet.clinic_id else []
+        )
+        ctx['reviews'] = (
+            Review.objects.filter(vet=vet, is_published=True)
+            .select_related('author')[:20]
+        )
         return ctx

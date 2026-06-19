@@ -1,92 +1,191 @@
 {% extends 'base.html' %}
+{% load ru_filters %}
 {% block title %}{{ clinic.name }} — EKM-PET{% endblock %}
 
-{% block content %}
-<div class="flex items-center gap-2 mb-3">
-  <a href="{% url 'clinics:clinic_list_public' %}" class="icon-btn">←</a>
-  <h1 class="mb-0">{{ clinic.name }}</h1>
-</div>
+{% block extra_head %}
+<style>
+  .clinic-hero {
+    background: linear-gradient(135deg, #6c63ff 0%, #00c9a7 100%);
+    color: white; border-radius: var(--radius);
+    padding: 24px; margin-bottom: 16px;
+  }
+  .clinic-hero h1 { color: white; margin: 0 0 8px; font-size: 1.5rem; }
+  .clinic-hero .stars { color: #ffd76b; letter-spacing: 2px; font-size: 1.1rem; }
+  .clinic-hero .rating-line {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; margin-bottom: 12px;
+  }
+  .clinic-hero .badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .clinic-hero .badges span {
+    background: rgba(255,255,255,.18); padding: 5px 12px;
+    border-radius: 50px; font-size: .78rem; font-weight: 600;
+  }
 
-<div class="card">
-  <div style="display:flex;flex-direction:column;gap:10px">
-    <div class="flex items-center gap-2">
-      <span style="font-size:1.2rem">📍</span>
-      <span>{{ clinic.address }}</span>
-    </div>
-    {% if clinic.phone %}
-    <div class="flex items-center gap-2">
-      <span style="font-size:1.2rem">📞</span>
-      <a href="tel:{{ clinic.phone }}">{{ clinic.phone }}</a>
-    </div>
-    {% endif %}
-    {% if clinic.email %}
-    <div class="flex items-center gap-2">
-      <span style="font-size:1.2rem">✉️</span>
-      <a href="mailto:{{ clinic.email }}">{{ clinic.email }}</a>
-    </div>
-    {% endif %}
-    {% if clinic.website %}
-    <div class="flex items-center gap-2">
-      <span style="font-size:1.2rem">🌐</span>
-      <a href="{{ clinic.website }}" target="_blank" rel="noopener">{{ clinic.website }}</a>
-    </div>
-    {% endif %}
-    {% if clinic.rating > 0 %}
-    <div class="flex items-center gap-2">
-      <span style="font-size:1.2rem">⭐</span>
-      <span>{{ clinic.rating }} / 5</span>
-    </div>
-    {% endif %}
+  .contacts-grid { display: grid; gap: 8px; grid-template-columns: 1fr; }
+  @media (min-width:520px) { .contacts-grid { grid-template-columns: 1fr 1fr; } }
+  .contact-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: var(--gray-light);
+    border-radius: var(--radius-sm);
+  }
+  .contact-row .ico { font-size: 1.25rem; flex-shrink: 0; }
+  .contact-row a { color: var(--text); font-weight: 600; }
+
+  .section-h { font-size: 1.1rem; font-weight: 700; margin: 22px 0 10px; }
+
+  .vet-row {
+    display: flex; gap: 12px; padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+  }
+  .vet-row:last-child { border-bottom: none; }
+  .vet-row:hover { text-decoration: none; color: inherit; }
+  .vet-row .ava {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #6c63ff, #00c9a7);
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 700; overflow: hidden; flex-shrink: 0;
+  }
+  .vet-row .ava img { width: 100%; height: 100%; object-fit: cover; }
+  .vet-row .info { flex: 1; min-width: 0; }
+  .vet-row .name { font-weight: 600; }
+  .vet-row .specs { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+  .vet-row .rating { font-size: .82rem; color: var(--text); margin-top: 2px; }
+  .vet-row .rating .stars { color: #ffb347; }
+  .vet-row .price { font-weight: 700; color: var(--primary); font-size: .9rem; white-space: nowrap; }
+
+  .service-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .service-row:last-child { border-bottom: none; }
+  .service-row .price { font-weight: 700; color: var(--primary); white-space: nowrap; }
+
+  .review-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .review-item:last-child { border-bottom: none; }
+  .review-head { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
+  .review-head .author { font-weight: 600; font-size: .9rem; }
+  .review-head .stars { color: #ffb347; letter-spacing: 1px; font-size: .85rem; }
+  .review-head .date { color: var(--text-muted); font-size: .75rem; margin-left: auto; }
+  .review-item .text { font-size: .9rem; }
+  .review-prosc { display: flex; gap: 12px; margin-top: 6px; font-size: .82rem; flex-wrap: wrap; }
+  .review-prosc .pros { color: #0a7a6a; }
+  .review-prosc .cons { color: #c0143c; }
+
+  .back-link { color: var(--text-muted); text-decoration: none; font-size: .85rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'clinics:public_clinic_list' %}" class="back-link">← Все клиники</a>
+
+<div class="clinic-hero">
+  <h1>{{ clinic.name }}</h1>
+  <div class="rating-line">
+    <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= clinic.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+    <span>{{ clinic.rating|floatformat:1 }}</span>
+    <span style="opacity:.85;font-weight:400">· {{ clinic.reviews_count }} {{ clinic.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</span>
+  </div>
+  <div style="opacity:.92;font-size:.92rem">📍 {{ clinic.city }}{% if clinic.address %} · {{ clinic.address }}{% endif %}</div>
+  {% if clinic.working_hours %}
+    <div style="opacity:.85;font-size:.85rem;margin-top:6px">🕐 {{ clinic.working_hours }}</div>
+  {% endif %}
+  <div class="badges">
+    {% if clinic.is_24h %}<span>🌙 24/7</span>{% endif %}
+    {% if clinic.accepts_online %}<span>💬 Онлайн</span>{% endif %}
+    {% if clinic.has_lab %}<span>🧪 Лаборатория</span>{% endif %}
+    {% if clinic.has_surgery %}<span>🔪 Хирургия</span>{% endif %}
   </div>
 </div>
 
-{% if clinic.description %}
 <div class="card">
-  <h2>О клинике</h2>
-  <p>{{ clinic.description|linebreaks }}</p>
+  <div class="contacts-grid">
+    {% if clinic.phone %}
+      <div class="contact-row"><span class="ico">📞</span><a href="tel:{{ clinic.phone }}">{{ clinic.phone }}</a></div>
+    {% endif %}
+    {% if clinic.email %}
+      <div class="contact-row"><span class="ico">✉️</span><a href="mailto:{{ clinic.email }}">{{ clinic.email }}</a></div>
+    {% endif %}
+    {% if clinic.website %}
+      <div class="contact-row"><span class="ico">🌐</span><a href="{{ clinic.website }}" target="_blank" rel="noopener">{{ clinic.website }}</a></div>
+    {% endif %}
+  </div>
+  {% if clinic.description %}
+    <div class="mt-3" style="white-space:pre-line;color:var(--text-muted)">{{ clinic.description }}</div>
+  {% endif %}
+</div>
+
+{% if vets %}
+<div class="card">
+  <h3 class="section-h" style="margin-top:0">Врачи клиники</h3>
+  {% for vet in vets %}
+    <a class="vet-row" href="{% url 'clinics:public_vet_detail' vet.pk %}">
+      <div class="ava">
+        {% if vet.photo %}<img src="{{ vet.photo.url }}" alt="">{% else %}{{ vet.display_name|slice:":1" }}{% endif %}
+      </div>
+      <div class="info">
+        <div class="name">{{ vet.display_name }}</div>
+        <div class="specs">
+          {% for s in vet.specializations.all %}{{ s.icon }} {{ s.name }}{% if not forloop.last %} · {% endif %}{% endfor %}
+        </div>
+        <div class="rating">
+          <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= vet.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          {{ vet.rating|floatformat:1 }} · {{ vet.reviews_count }} отз.
+        </div>
+      </div>
+      <div class="price">от {{ vet.price_consultation|floatformat:0 }} ₽</div>
+    </a>
+  {% endfor %}
 </div>
 {% endif %}
 
-{% if clinic.services.all %}
+{% if services %}
 <div class="card">
-  <h2>Услуги</h2>
-  {% for service in clinic.services.all %}
-    <div class="flex justify-between items-center" style="padding:10px 0;border-bottom:1px solid var(--border)">
-      <span>{{ service.name }}</span>
-      <span class="badge badge-primary">{{ service.price }} ₽</span>
+  <h3 class="section-h" style="margin-top:0">Услуги</h3>
+  {% for service in services %}
+    <div class="service-row">
+      <div>
+        <div style="font-weight:600">{{ service.name }}</div>
+        {% if service.description %}<div class="text-muted text-sm">{{ service.description|truncatechars:100 }}</div>{% endif %}
+      </div>
+      <div class="price">{{ service.price|floatformat:0 }} ₽</div>
     </div>
   {% endfor %}
 </div>
 {% endif %}
 
-{% if clinic.working_hours %}
-<div class="card">
-  <h2>Часы работы</h2>
-  <p>{{ clinic.working_hours|linebreaks }}</p>
-</div>
-{% endif %}
-
-{% if clinic.yandex_maps_id %}
-<div class="card" style="padding:0;overflow:hidden">
-  <div style="width:100%;height:360px;position:relative">
-    <iframe style="width:100%;height:100%;border:none"
-      src="https://yandex.ru/maps-reviews-widget/{{ clinic.yandex_maps_id }}?comments"></iframe>
+<div class="card" id="reviews">
+  <div class="flex justify-between items-center mb-2">
+    <h3 class="section-h" style="margin:0">Отзывы</h3>
+    <a href="{% url 'reviews:add' 'clinic' clinic.pk %}" class="btn btn-sm">+ Отзыв</a>
   </div>
-</div>
-{% endif %}
-
-{% if user.is_authenticated and user.user_type == 'owner' %}
-<div class="card">
-  <h2>Написать ветеринару</h2>
-  <div class="flex gap-2 flex-wrap">
-    {% for vet in clinic.admins.all %}
-      {% if vet.user_type in 'vet,clinic_admin' %}
-        <a href="{% url 'chat:start_chat' clinic.id vet.id %}" class="btn btn-sm">
-          💬 {{ vet.get_full_name|default:vet.username }}
-        </a>
-      {% endif %}
+  {% if reviews %}
+    {% for r in reviews %}
+      <div class="review-item">
+        <div class="review-head">
+          <span class="author">{{ r.author.get_full_name|default:r.author.username|default:"Аноним" }}</span>
+          <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          <span class="date">{{ r.created_at|date:"d.m.Y" }}</span>
+        </div>
+        {% if r.text %}<div class="text">{{ r.text|linebreaksbr }}</div>{% endif %}
+        {% if r.pros or r.cons %}
+        <div class="review-prosc">
+          {% if r.pros %}<div class="pros">➕ {{ r.pros }}</div>{% endif %}
+          {% if r.cons %}<div class="cons">➖ {{ r.cons }}</div>{% endif %}
+        </div>
+        {% endif %}
+        {% if r.clinic_reply %}
+          <div class="mt-2" style="background:var(--gray-light);padding:10px 12px;border-radius:var(--radius-sm);font-size:.85rem;">
+            <strong>Ответ клиники:</strong> {{ r.clinic_reply }}
+          </div>
+        {% endif %}
+      </div>
     {% endfor %}
-  </div>
+  {% else %}
+    <div class="text-center" style="padding:24px 0;color:var(--text-muted)">
+      <div style="font-size:2.4rem;margin-bottom:6px">🌟</div>
+      <p>Пока нет отзывов</p>
+    </div>
+  {% endif %}
 </div>
-{% endif %}
 {% endblock %}

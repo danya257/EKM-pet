@@ -34,3 +34,7 @@ db.sqlite3
 .env
 .env.local
 *.env
+
+# Local dev DB and venv
+db.sqlite3
+.venv/

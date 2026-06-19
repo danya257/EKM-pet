@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Запись · {{ appointment.vet.display_name }} — EKM-PET{% endblock %}
+
+{% block content %}
+<a href="{% url 'appointments:list' %}" class="text-muted text-sm" style="text-decoration:none">← Все записи</a>
+
+<div class="card mt-2">
+  <div class="flex justify-between items-center mb-2">
+    <h2 class="mb-0">{{ appointment.scheduled_at|date:"d.m.Y H:i" }}</h2>
+    <span class="badge badge-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'cancelled' %}danger{% elif appointment.status == 'done' %}gray{% else %}warning{% endif %}">{{ appointment.get_status_display }}</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="info-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div>
+      <div class="text-muted text-xs">Врач</div>
+      <div><a href="{{ appointment.vet.get_absolute_url }}">{{ appointment.vet.display_name }}</a></div>
+    </div>
+    {% if appointment.clinic %}
+    <div>
+      <div class="text-muted text-xs">Клиника</div>
+      <div><a href="{{ appointment.clinic.get_absolute_url }}">{{ appointment.clinic.name }}</a></div>
+    </div>
+    {% endif %}
+    {% if appointment.pet %}
+    <div>
+      <div class="text-muted text-xs">Питомец</div>
+      <div>🐾 {{ appointment.pet.name }}</div>
+    </div>
+    {% endif %}
+    {% if appointment.service %}
+    <div>
+      <div class="text-muted text-xs">Услуга</div>
+      <div>{{ appointment.service.name }} — {{ appointment.service.price|floatformat:0 }} ₽</div>
+    </div>
+    {% endif %}
+    <div>
+      <div class="text-muted text-xs">Формат</div>
+      <div>{{ appointment.get_kind_display }}</div>
+    </div>
+    {% if appointment.contact_phone %}
+    <div>
+      <div class="text-muted text-xs">Контакт</div>
+      <div>{{ appointment.contact_phone }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if appointment.reason %}
+    <div class="mt-3">
+      <div class="text-muted text-xs">Причина обращения</div>
+      <div style="white-space:pre-line">{{ appointment.reason }}</div>
+    </div>
+  {% endif %}
+
+  {% if appointment.vet_note %}
+    <div class="mt-3" style="background:var(--gray-light);padding:12px;border-radius:var(--radius-sm)">
+      <div class="text-muted text-xs">Заметка врача</div>
+      <div style="white-space:pre-line">{{ appointment.vet_note }}</div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

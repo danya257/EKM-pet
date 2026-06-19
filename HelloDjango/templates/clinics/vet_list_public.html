@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Ветврачи — EKM-PET{% endblock %}
+
+{% block extra_head %}
+<style>
+  .catalog-head { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+  .catalog-head h1 { margin: 0; flex: 1; }
+  .tab-switch { display: inline-flex; background: var(--gray-light); border-radius: 50px; padding: 3px; }
+  .tab-switch a {
+    padding: 7px 16px; border-radius: 50px; font-size: .85rem; font-weight: 600;
+    color: var(--text-muted); text-decoration: none;
+  }
+  .tab-switch a.active { background: var(--white); color: var(--primary); box-shadow: var(--shadow-sm); }
+
+  .search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+  .search-bar input {
+    flex: 1; padding: 12px 18px; border: 1.5px solid var(--border); border-radius: 50px;
+    font-size: .92rem; font-family: inherit; outline: none; background: var(--white);
+  }
+  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .filter-row select, .filter-row input[type="number"] {
+    padding: 9px 14px; border-radius: 50px;
+    border: 1.5px solid var(--border); background: var(--white);
+    font-size: .85rem; font-family: inherit; outline: none;
+  }
+  .filter-row input[type="number"] { width: 120px; }
+
+  .toggle-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .toggle-chips label {
+    padding: 7px 14px; border-radius: 50px; font-size: .8rem; font-weight: 500;
+    border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted);
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  .toggle-chips input { display: none; }
+  .toggle-chips label:has(input:checked) {
+    background: var(--primary); color: white; border-color: var(--primary);
+  }
+
+  .spec-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; overflow-x: auto; }
+  .spec-chips::-webkit-scrollbar { display: none; }
+  .spec-chip {
+    padding: 7px 14px; border-radius: 50px; font-size: .82rem; font-weight: 500;
+    border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted);
+    text-decoration: none; white-space: nowrap;
+  }
+  .spec-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  .vet-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 720px) { .vet-grid { grid-template-columns: 1fr 1fr; } }
+
+  .vet-card {
+    background: var(--white); border-radius: var(--radius);
+    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+    padding: 16px; text-decoration: none; color: inherit;
+    display: flex; gap: 14px;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+  .vet-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); text-decoration: none; color: inherit; }
+  .vet-avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #6c63ff, #00c9a7);
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; font-weight: 700; flex-shrink: 0; overflow: hidden;
+  }
+  .vet-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .vet-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .vet-body h3 { margin: 0; font-size: 1.05rem; }
+  .vet-clinic { color: var(--text-muted); font-size: .82rem; }
+  .vet-spec { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+  .vet-spec span {
+    font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 50px;
+    background: var(--primary-bg); color: var(--primary-dark);
+  }
+  .vet-rating { display: flex; align-items: center; gap: 6px; font-size: .85rem; margin-top: 4px; }
+  .stars { color: #ffb347; letter-spacing: 1px; font-size: .85rem; }
+  .vet-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: var(--text-muted); margin-top: 4px; }
+  .vet-meta strong { color: var(--text); font-weight: 600; }
+
+  .empty-state { text-align: center; padding: 48px 16px; color: var(--text-muted); }
+  .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
+  .pagination a, .pagination .current {
+    padding: 7px 14px; border-radius: 50px; font-size: .82rem;
+    background: var(--white); border: 1.5px solid var(--border); text-decoration: none; color: var(--text);
+  }
+  .pagination .current { background: var(--primary); color: white; border-color: var(--primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalog-head">
+  <h1>Ветврачи</h1>
+  <div class="tab-switch">
+    <a href="{% url 'clinics:public_clinic_list' %}">🏥 Клиники</a>
+    <a href="{% url 'clinics:public_vet_list' %}" class="active">👨‍⚕️ Врачи</a>
+  </div>
+</div>
+
+<form method="get" id="catalog-form">
+  <div class="search-bar">
+    <input type="search" name="q" value="{{ q }}" placeholder="Имя врача, специализация, клиника…">
+    <button type="submit" class="btn">Найти</button>
+  </div>
+
+  <div class="filter-row">
+    <select name="city" onchange="this.form.submit()">
+      <option value="">Все города</option>
+      {% for c in cities %}
+        <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+    <select name="sort" onchange="this.form.submit()">
+      <option value="rating"     {% if sort == 'rating' %}selected{% endif %}>По рейтингу</option>
+      <option value="price"      {% if sort == 'price' %}selected{% endif %}>Дешевле</option>
+      <option value="experience" {% if sort == 'experience' %}selected{% endif %}>Опытнее</option>
+    </select>
+    <input type="number" name="price_max" value="{{ filters.price_max }}" placeholder="Цена до, ₽" onchange="this.form.submit()">
+  </div>
+
+  <div class="toggle-chips">
+    <label><input type="checkbox" name="online"     value="1" {% if filters.online %}checked{% endif %}     onchange="this.form.submit()"><span>💬 Онлайн</span></label>
+    <label><input type="checkbox" name="house_call" value="1" {% if filters.house_call %}checked{% endif %} onchange="this.form.submit()"><span>🚗 На дому</span></label>
+  </div>
+
+  <div class="spec-chips">
+    <a class="spec-chip {% if not selected_spec %}active{% endif %}" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}">Все</a>
+    {% for s in specs %}
+      <a class="spec-chip {% if s.slug == selected_spec %}active{% endif %}"
+         href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}spec={{ s.slug }}">{{ s.icon }} {{ s.name }}</a>
+    {% endfor %}
+  </div>
+</form>
+
+{% if vets %}
+<div class="vet-grid">
+  {% for vet in vets %}
+    <a class="vet-card" href="{% url 'clinics:public_vet_detail' vet.pk %}">
+      <div class="vet-avatar">
+        {% if vet.photo %}
+          <img src="{{ vet.photo.url }}" alt="{{ vet.display_name }}">
+        {% else %}
+          {{ vet.display_name|slice:":1" }}
+        {% endif %}
+      </div>
+      <div class="vet-body">
+        <h3>{{ vet.display_name }}</h3>
+        {% if vet.clinic %}<div class="vet-clinic">🏥 {{ vet.clinic.name }}{% if vet.clinic.city %} · {{ vet.clinic.city }}{% endif %}</div>{% endif %}
+        <div class="vet-spec">
+          {% for s in vet.specializations.all %}<span>{{ s.icon }} {{ s.name }}</span>{% endfor %}
+        </div>
+        <div class="vet-rating">
+          <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= vet.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+          <strong>{{ vet.rating|floatformat:1 }}</strong>
+          <span class="text-muted">· {{ vet.reviews_count }} отз.</span>
+        </div>
+        <div class="vet-meta">
+          {% if vet.experience_years %}<span>стаж <strong>{{ vet.experience_years }} лет</strong></span>{% endif %}
+          {% if vet.price_consultation %}<span>от <strong>{{ vet.price_consultation|floatformat:0 }} ₽</strong></span>{% endif %}
+        </div>
+      </div>
+    </a>
+  {% endfor %}
+</div>
+
+{% if is_paginated %}
+<div class="pagination">
+  {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">←</a>{% endif %}
+  <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">→</a>{% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  <div style="font-size:3rem;margin-bottom:12px">🔍</div>
+  <h3>Никого не нашлось</h3>
+  <a href="{% url 'clinics:public_vet_list' %}" class="btn mt-3">Сбросить фильтры</a>
+</div>
+{% endif %}
+{% endblock %}
