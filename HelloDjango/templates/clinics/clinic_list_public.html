@@ -145,7 +145,7 @@
 {% if clinics %}
 <div class="clinic-list">
   {% for clinic in clinics %}
-    <a class="clinic-row" href="{% url 'clinics:public_clinic_detail' clinic.pk %}">
+    <a class="clinic-row reveal" href="{% url 'clinics:public_clinic_detail' clinic.pk %}" style="--rev-delay:{{ forloop.counter0|add:0 }}0ms">
       <div class="clinic-thumb">{{ clinic.name|slice:":1" }}</div>
       <div class="clinic-body">
         <div class="clinic-name">{{ clinic.name }}</div>
@@ -154,8 +154,8 @@
           {% if clinic.phone %}<span class="dot"></span><span><svg class="icon"><use href="#i-phone"/></svg> {{ clinic.phone }}</span>{% endif %}
         </div>
         <div class="clinic-tags">
-          {% if clinic.is_24h %}<span class="tag">Круглосуточно</span>{% endif %}
-          {% if clinic.accepts_online %}<span class="tag">Онлайн-консультации</span>{% endif %}
+          {% if clinic.is_24h %}<span class="tag"><span class="pulse-dot live"></span>Круглосуточно</span>{% endif %}
+          {% if clinic.accepts_online %}<span class="tag"><span class="pulse-dot"></span>Онлайн-консультации</span>{% endif %}
           {% if clinic.has_lab %}<span class="tag">Своя лаборатория</span>{% endif %}
           {% if clinic.has_surgery %}<span class="tag">Хирургия</span>{% endif %}
         </div>

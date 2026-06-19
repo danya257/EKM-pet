@@ -136,7 +136,7 @@
     {% if vet.accepts_online or vet.accepts_house_call %}
     <div class="vet-flags">
       {% if vet.accepts_online %}
-        <span class="flag"><svg class="icon"><use href="#i-video"/></svg>Онлайн-консультации</span>
+        <span class="flag"><span class="pulse-dot"></span><svg class="icon"><use href="#i-video"/></svg>Онлайн-консультации</span>
       {% endif %}
       {% if vet.accepts_house_call %}
         <span class="flag"><svg class="icon"><use href="#i-car"/></svg>Выезжает на дом</span>
@@ -144,11 +144,19 @@
     </div>
     {% endif %}
   </div>
-  <div class="vet-rating-box">
-    <div class="big num">{{ vet.rating|floatformat:1 }}</div>
+  <div class="vet-rating-box" data-stars-reveal>
+    <div class="big num ticker" data-to="{{ vet.rating|floatformat:1 }}" data-dur="900">{{ vet.rating|floatformat:1 }}</div>
     {% stars vet.rating %}
     <div class="sub num">{{ vet.reviews_count }} {{ vet.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</div>
   </div>
+</div>
+
+<div class="ecg-divider" aria-hidden="true">
+  <svg viewBox="0 0 1200 64" preserveAspectRatio="none">
+    <path class="ecg-base" d="M0 32 H1200"/>
+    <path class="ecg-line" d="M0 32 L160 32 L180 32 L195 28 L205 36 L215 32 L260 32 L280 12 L300 56 L320 32 L360 32 L380 28 L390 36 L420 32 L520 32 L560 12 L600 32 L660 32 L680 28 L695 36 L740 32 L820 32 L840 12 L880 50 L900 32 L1000 32 L1020 28 L1030 36 L1080 32 L1200 32"/>
+    <circle class="ecg-dot" cx="900" cy="32" r="3.2"/>
+  </svg>
 </div>
 
 <div class="cta-row">

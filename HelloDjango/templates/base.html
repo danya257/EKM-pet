@@ -408,6 +408,121 @@
       .grid-12 > * { grid-column: span 12; }
       footer.foot { padding-bottom: 90px; }
     }
+
+    /* ====================================================================
+       VITAL SIGNS — система анимаций
+       ==================================================================== */
+
+    /* — 1. ECG-разделитель ------------------------------------------------ */
+    .ecg-divider {
+      position: relative;
+      height: 64px;
+      margin: 32px 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .ecg-divider svg { width: 100%; height: 100%; display: block; }
+    .ecg-divider .ecg-base { stroke: var(--hairline-strong); stroke-width: 1; fill: none; }
+    .ecg-divider .ecg-line {
+      stroke: var(--brand); stroke-width: 1.6; fill: none;
+      stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 200 1200;
+      animation: ecg-run 4.8s linear infinite;
+    }
+    .ecg-divider .ecg-dot {
+      fill: var(--brand);
+      animation: ecg-dot-pulse 1.2s ease-in-out infinite;
+      transform-origin: center;
+    }
+    @keyframes ecg-run {
+      0%   { stroke-dashoffset: 1400; }
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes ecg-dot-pulse {
+      0%, 70%, 100% { transform: scale(1);   opacity: .9; }
+      35%           { transform: scale(1.6); opacity: 1; }
+    }
+
+    /* — 2. Hand-drawn underline под акцентом hero ------------------------ */
+    .scribble-wrap { position: relative; display: inline-block; }
+    .scribble-wrap > .scribble {
+      position: absolute; left: -2%; right: -2%; bottom: -10px;
+      width: 104%; height: 14px;
+      stroke: var(--brand); stroke-width: 3; fill: none;
+      stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 420;
+      stroke-dashoffset: 420;
+      opacity: 0;
+      animation: scribble-draw 1.6s cubic-bezier(.65,0,.35,1) .35s forwards;
+    }
+    @keyframes scribble-draw {
+      0%   { opacity: 0; stroke-dashoffset: 420; }
+      10%  { opacity: 1; }
+      100% { opacity: 1; stroke-dashoffset: 0; }
+    }
+
+    /* — 3. Pulse-dot («Онлайн», «24/7», «Live»)--------------------------- */
+    .pulse-dot {
+      position: relative;
+      display: inline-block; width: 8px; height: 8px;
+      vertical-align: 1px; margin-right: 6px;
+      background: var(--brand); border-radius: 50%;
+    }
+    .pulse-dot::before {
+      content: ''; position: absolute; inset: -2px;
+      border-radius: 50%; background: var(--brand);
+      opacity: .35; animation: pulse-ring 1.8s ease-out infinite;
+    }
+    @keyframes pulse-ring {
+      0%   { transform: scale(.8); opacity: .5; }
+      80%  { transform: scale(2.4); opacity: 0; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+    .pulse-dot.live { background: #c92a2a; }
+    .pulse-dot.live::before { background: #c92a2a; }
+
+    /* — 4. Stagger reveal элементов (IntersectionObserver) --------------- */
+    .reveal {
+      opacity: 0; transform: translateY(14px);
+      transition: opacity .6s ease-out, transform .6s cubic-bezier(.2,.6,.2,1);
+      transition-delay: var(--rev-delay, 0ms);
+    }
+    .reveal.is-in {
+      opacity: 1; transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .scribble-wrap > .scribble { animation: none; opacity: 1; stroke-dashoffset: 0; }
+      .ecg-divider .ecg-line, .ecg-divider .ecg-dot,
+      .pulse-dot::before { animation: none; }
+      .pulse-dot::before { opacity: 0; }
+    }
+
+    /* — 5. Tick-up чисел: класс-маркер; JS подставляет value -------------- */
+    .ticker { font-variant-numeric: tabular-nums; }
+
+    /* — 6. Magnetic tilt подсветка — JS добавляет --magn-x / --magn-y ----- */
+    .magnetic {
+      transition: transform .25s cubic-bezier(.2,.6,.2,1);
+      transform: translate3d(calc(var(--magn-x,0) * 1px),
+                             calc(var(--magn-y,0) * 1px), 0);
+    }
+
+    /* — 7. Star-fill reveal — звёзды появляются с заливкой ---------------- */
+    .stars.is-revealing svg {
+      opacity: 0; transform: translateY(4px);
+      animation: star-pop .5s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    .stars.is-revealing svg:nth-child(1) { animation-delay: .05s; }
+    .stars.is-revealing svg:nth-child(2) { animation-delay: .12s; }
+    .stars.is-revealing svg:nth-child(3) { animation-delay: .19s; }
+    .stars.is-revealing svg:nth-child(4) { animation-delay: .26s; }
+    .stars.is-revealing svg:nth-child(5) { animation-delay: .33s; }
+    @keyframes star-pop {
+      0%   { opacity: 0; transform: translateY(4px) scale(.6); }
+      70%  { opacity: 1; transform: translateY(0)   scale(1.15); }
+      100% { opacity: 1; transform: translateY(0)   scale(1); }
+    }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -442,8 +557,22 @@
     <symbol id="i-plus"     viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
     <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 4h12v18l-6-4-6 4V4Z"/></symbol>
     <symbol id="i-stethoscope" viewBox="0 0 24 24"><path d="M5 3v6a4 4 0 0 0 8 0V3M9 13v3a5 5 0 0 0 10 0v-1"/><circle cx="19" cy="13" r="2"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9Z"/></symbol>
   </defs>
 </svg>
+
+<!-- Reusable ECG divider — вставляется как <div class="ecg-divider"></div> через JS -->
+<template id="ecg-divider-tpl">
+<svg viewBox="0 0 1200 64" preserveAspectRatio="none" aria-hidden="true">
+  <path class="ecg-base" d="M0 32 H1200" />
+  <path class="ecg-line"
+        d="M0 32 L160 32 L180 32 L195 28 L205 36 L215 32
+           L260 32 L280 12 L300 56 L320 32 L360 32 L380 28 L390 36
+           L420 32 L520 32 L560 12 L600 32 L660 32 L680 28 L695 36
+           L740 32 L820 32 L840 12 L880 50 L900 32 L1000 32 L1020 28 L1030 36 L1080 32 L1200 32" />
+  <circle class="ecg-dot" cx="900" cy="32" r="3.2"/>
+</svg>
+</template>
 
 <header class="masthead">
   <div class="masthead-inner">
@@ -518,5 +647,95 @@
 </nav>
 
 {% block extra_js %}{% endblock %}
+
+<script>
+/* ==================================================================
+   VITAL SIGNS — runtime hooks
+   ================================================================== */
+(function () {
+  const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- 1. Reveal-on-scroll для .reveal -------------------------------- */
+  const revealEls = document.querySelectorAll('.reveal');
+  if (revealEls.length && 'IntersectionObserver' in window && !REDUCE) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('is-in');
+        io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    revealEls.forEach((el, i) => {
+      if (!el.style.getPropertyValue('--rev-delay')) {
+        el.style.setProperty('--rev-delay', (Math.min(i, 12) * 40) + 'ms');
+      }
+      io.observe(el);
+    });
+  } else if (REDUCE) {
+    revealEls.forEach((el) => el.classList.add('is-in'));
+  }
+
+  /* ---- 2. Tick-up чисел для .ticker[data-to] -------------------------- */
+  const tickers = document.querySelectorAll('.ticker[data-to]');
+  if (tickers.length && !REDUCE) {
+    const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+    const tio = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        tio.unobserve(e.target);
+        const node = e.target;
+        const to = parseFloat(node.dataset.to) || 0;
+        const dur = parseInt(node.dataset.dur || '1100', 10);
+        const start = performance.now();
+        const isFloat = (to % 1) !== 0;
+        function frame(now) {
+          const t = Math.min(1, (now - start) / dur);
+          const v = to * easeOut(t);
+          node.textContent = isFloat ? v.toFixed(1) : Math.round(v).toLocaleString('ru-RU');
+          if (t < 1) requestAnimationFrame(frame);
+          else node.textContent = isFloat ? to.toFixed(1) : to.toLocaleString('ru-RU');
+        }
+        requestAnimationFrame(frame);
+      });
+    }, { threshold: 0.4 });
+    tickers.forEach((n) => { n.textContent = '0'; tio.observe(n); });
+  }
+
+  /* ---- 3. Stars reveal при появлении --------------------------------- */
+  const ratingHosts = document.querySelectorAll('[data-stars-reveal]');
+  if (ratingHosts.length && 'IntersectionObserver' in window && !REDUCE) {
+    const sio = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        sio.unobserve(e.target);
+        e.target.querySelectorAll('.stars').forEach((s) => {
+          s.classList.add('is-revealing');
+          setTimeout(() => s.classList.remove('is-revealing'), 800);
+        });
+      });
+    }, { threshold: 0.4 });
+    ratingHosts.forEach((n) => sio.observe(n));
+  }
+
+  /* ---- 4. Magnetic tilt на .magnetic --------------------------------- */
+  const mags = document.querySelectorAll('.magnetic');
+  if (mags.length && !REDUCE && matchMedia('(hover: hover)').matches) {
+    mags.forEach((el) => {
+      el.addEventListener('mousemove', (e) => {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left - r.width / 2) / r.width;
+        const y = (e.clientY - r.top  - r.height / 2) / r.height;
+        el.style.setProperty('--magn-x', (x * 6).toFixed(2));
+        el.style.setProperty('--magn-y', (y * 4).toFixed(2));
+      });
+      el.addEventListener('mouseleave', () => {
+        el.style.setProperty('--magn-x', '0');
+        el.style.setProperty('--magn-y', '0');
+      });
+    });
+  }
+})();
+</script>
+
 </body>
 </html>

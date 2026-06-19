@@ -158,7 +158,7 @@
 
 <section class="hero">
   <div class="eyebrow">Каталог · ветеринарная помощь</div>
-  <h1>Найдите ветврача,<br>которому можно <span class="accent">доверить</span><br>своего питомца.</h1>
+  <h1>Найдите ветврача,<br>которому можно <span class="scribble-wrap"><span class="accent">доверить</span><svg class="scribble" viewBox="0 0 420 14" preserveAspectRatio="none" aria-hidden="true"><path d="M4 8 Q60 2 120 8 T240 8 T360 7 T416 9"/></svg></span><br>своего питомца.</h1>
   <p class="lead">Прозрачные рейтинги клиник и врачей, отзывы владельцев, цены и онлайн-запись. Без рекламы и липовых пятёрок.</p>
 
   <form class="hero-search" method="get" action="{% url 'clinics:public_vet_list' %}">
@@ -182,11 +182,19 @@
 </section>
 
 <section class="stats-row">
-  <div class="stat"><div class="num num">{{ stats.clinics }}</div><div class="lbl">{{ stats.clinics|plural_ru:"клиника,клиники,клиник" }} в каталоге</div></div>
-  <div class="stat"><div class="num num">{{ stats.vets }}</div><div class="lbl">{{ stats.vets|plural_ru:"врач,врача,врачей" }} с подтверждённым профилем</div></div>
-  <div class="stat"><div class="num num">{{ stats.reviews }}</div><div class="lbl">{{ stats.reviews|plural_ru:"отзыв,отзыва,отзывов" }} от владельцев</div></div>
-  <div class="stat"><div class="num num">{{ stats.users }}</div><div class="lbl">{{ stats.users|plural_ru:"пользователь,пользователя,пользователей" }} ведут карты питомцев</div></div>
+  <div class="stat"><div class="num ticker" data-to="{{ stats.clinics }}">{{ stats.clinics }}</div><div class="lbl">{{ stats.clinics|plural_ru:"клиника,клиники,клиник" }} в каталоге</div></div>
+  <div class="stat"><div class="num ticker" data-to="{{ stats.vets }}">{{ stats.vets }}</div><div class="lbl">{{ stats.vets|plural_ru:"врач,врача,врачей" }} с подтверждённым профилем</div></div>
+  <div class="stat"><div class="num ticker" data-to="{{ stats.reviews }}">{{ stats.reviews }}</div><div class="lbl">{{ stats.reviews|plural_ru:"отзыв,отзыва,отзывов" }} от владельцев</div></div>
+  <div class="stat"><div class="num ticker" data-to="{{ stats.users }}">{{ stats.users }}</div><div class="lbl">{{ stats.users|plural_ru:"пользователь,пользователя,пользователей" }} ведут карты питомцев</div></div>
 </section>
+
+<div class="ecg-divider" aria-hidden="true">
+  <svg viewBox="0 0 1200 64" preserveAspectRatio="none">
+    <path class="ecg-base" d="M0 32 H1200"/>
+    <path class="ecg-line" d="M0 32 L160 32 L180 32 L195 28 L205 36 L215 32 L260 32 L280 12 L300 56 L320 32 L360 32 L380 28 L390 36 L420 32 L520 32 L560 12 L600 32 L660 32 L680 28 L695 36 L740 32 L820 32 L840 12 L880 50 L900 32 L1000 32 L1020 28 L1030 36 L1080 32 L1200 32"/>
+    <circle class="ecg-dot" cx="900" cy="32" r="3.2"/>
+  </svg>
+</div>
 
 <section class="section">
   <div class="section-h">
@@ -195,7 +203,7 @@
   </div>
   <div class="spec-grid">
     {% for s in specs %}
-      <a class="spec-card" href="{% url 'clinics:public_vet_list' %}?spec={{ s.slug }}">
+      <a class="spec-card reveal" href="{% url 'clinics:public_vet_list' %}?spec={{ s.slug }}" style="--rev-delay:{{ forloop.counter0|add:0 }}0ms">
         <svg class="icon"><use href="#i-stethoscope"/></svg>
         <div>
           <div class="name">{{ s.name }}</div>
@@ -214,7 +222,7 @@
   </div>
   <div class="vet-mini-grid">
     {% for vet in top_vets %}
-      <a class="vet-mini" href="{% url 'clinics:public_vet_detail' vet.pk %}">
+      <a class="vet-mini reveal magnetic" href="{% url 'clinics:public_vet_detail' vet.pk %}" style="--rev-delay:{{ forloop.counter0|add:0 }}0ms">
         <div class="ava">{% if vet.photo %}<img src="{{ vet.photo.url }}" alt="">{% else %}{{ vet.display_name|slice:":1" }}{% endif %}</div>
         <div>
           <div class="name">{{ vet.display_name }}</div>
@@ -243,7 +251,7 @@
   </div>
   <div class="clinic-mini-grid">
     {% for clinic in top_clinics %}
-      <a class="clinic-mini" href="{% url 'clinics:public_clinic_detail' clinic.pk %}">
+      <a class="clinic-mini reveal" href="{% url 'clinics:public_clinic_detail' clinic.pk %}" style="--rev-delay:{{ forloop.counter0|add:0 }}0ms">
         <div>
           <div class="name">{{ clinic.name }}</div>
           <div class="meta">{{ clinic.city|default:"Россия" }}{% if clinic.address %} · {{ clinic.address|truncatechars:48 }}{% endif %}</div>
