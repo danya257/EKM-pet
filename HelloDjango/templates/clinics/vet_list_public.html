@@ -1,160 +1,154 @@
 {% extends 'base.html' %}
-{% block title %}Ветврачи — EKM-PET{% endblock %}
+{% load ru_filters vetka %}
+{% block title %}Ветеринарные врачи — EKM · vet{% endblock %}
 
 {% block extra_head %}
 <style>
-  .catalog-head { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-  .catalog-head h1 { margin: 0; flex: 1; }
-  .tab-switch { display: inline-flex; background: var(--gray-light); border-radius: 50px; padding: 3px; }
-  .tab-switch a {
-    padding: 7px 16px; border-radius: 50px; font-size: .85rem; font-weight: 600;
-    color: var(--text-muted); text-decoration: none;
+  .head-bar {
+    display: flex; align-items: end; justify-content: space-between; gap: 24px;
+    flex-wrap: wrap; margin-bottom: 12px;
   }
-  .tab-switch a.active { background: var(--white); color: var(--primary); box-shadow: var(--shadow-sm); }
+  .switch {
+    display: inline-flex; border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .switch a {
+    padding: 8px 16px; font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); text-decoration: none; background: var(--paper);
+    border-right: 1px solid var(--hairline-strong);
+  }
+  .switch a:last-child { border-right: none; }
+  .switch a.is-active { background: var(--ink); color: var(--paper); }
+  .switch a:hover:not(.is-active) { background: var(--brand-soft); color: var(--ink); }
 
-  .search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
-  .search-bar input {
-    flex: 1; padding: 12px 18px; border: 1.5px solid var(--border); border-radius: 50px;
-    font-size: .92rem; font-family: inherit; outline: none; background: var(--white);
+  .vet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    margin-top: 0;
   }
-  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-  .filter-row select, .filter-row input[type="number"] {
-    padding: 9px 14px; border-radius: 50px;
-    border: 1.5px solid var(--border); background: var(--white);
-    font-size: .85rem; font-family: inherit; outline: none;
-  }
-  .filter-row input[type="number"] { width: 120px; }
-
-  .toggle-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-  .toggle-chips label {
-    padding: 7px 14px; border-radius: 50px; font-size: .8rem; font-weight: 500;
-    border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted);
-    cursor: pointer; user-select: none; white-space: nowrap;
-  }
-  .toggle-chips input { display: none; }
-  .toggle-chips label:has(input:checked) {
-    background: var(--primary); color: white; border-color: var(--primary);
-  }
-
-  .spec-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; overflow-x: auto; }
-  .spec-chips::-webkit-scrollbar { display: none; }
-  .spec-chip {
-    padding: 7px 14px; border-radius: 50px; font-size: .82rem; font-weight: 500;
-    border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted);
-    text-decoration: none; white-space: nowrap;
-  }
-  .spec-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-  .vet-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  @media (min-width: 720px) { .vet-grid { grid-template-columns: 1fr 1fr; } }
-
   .vet-card {
-    background: var(--white); border-radius: var(--radius);
-    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
-    padding: 16px; text-decoration: none; color: inherit;
-    display: flex; gap: 14px;
-    transition: transform var(--transition), box-shadow var(--transition);
+    display: grid; grid-template-columns: 96px 1fr;
+    gap: 18px;
+    padding: 20px;
+    background: var(--paper);
+    text-decoration: none; color: inherit;
+    border: 0;
   }
-  .vet-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); text-decoration: none; color: inherit; }
-  .vet-avatar {
-    width: 80px; height: 80px; border-radius: 50%;
-    background: linear-gradient(135deg, #6c63ff, #00c9a7);
-    color: white; display: flex; align-items: center; justify-content: center;
-    font-size: 1.8rem; font-weight: 700; flex-shrink: 0; overflow: hidden;
+  .vet-card:hover { background: var(--brand-tint); text-decoration: none; color: inherit; }
+  .vet-card:hover .vet-name { color: var(--brand); }
+  .vet-thumb {
+    width: 96px; height: 96px;
+    background: var(--brand-soft); border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    color: var(--brand); font-family: var(--font-serif);
+    font-size: 36px; font-weight: 600; letter-spacing: -0.02em;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    flex-shrink: 0;
   }
-  .vet-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .vet-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-  .vet-body h3 { margin: 0; font-size: 1.05rem; }
-  .vet-clinic { color: var(--text-muted); font-size: .82rem; }
-  .vet-spec { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
-  .vet-spec span {
-    font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 50px;
-    background: var(--primary-bg); color: var(--primary-dark);
+  .vet-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .vet-body { min-width: 0; }
+  .vet-name { font-family: var(--font-serif); font-size: 19px; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .vet-clinic { color: var(--mute); font-size: 13px; margin-bottom: 8px; }
+  .vet-clinic svg { width: 12px; height: 12px; vertical-align: -1px; }
+  .vet-specs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .vet-stats {
+    display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px;
+    color: var(--ink-soft); align-items: baseline;
   }
-  .vet-rating { display: flex; align-items: center; gap: 6px; font-size: .85rem; margin-top: 4px; }
-  .stars { color: #ffb347; letter-spacing: 1px; font-size: .85rem; }
-  .vet-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: .8rem; color: var(--text-muted); margin-top: 4px; }
-  .vet-meta strong { color: var(--text); font-weight: 600; }
+  .vet-stats .rating-num { font-family: var(--font-serif); font-size: 17px; font-weight: 600; color: var(--ink); }
+  .vet-stats .price { color: var(--brand); font-weight: 600; }
+  .vet-stats svg { width: 13px; height: 13px; color: var(--mute); }
 
-  .empty-state { text-align: center; padding: 48px 16px; color: var(--text-muted); }
-  .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
-  .pagination a, .pagination .current {
-    padding: 7px 14px; border-radius: 50px; font-size: .82rem;
-    background: var(--white); border: 1.5px solid var(--border); text-decoration: none; color: var(--text);
+  .toolbar-row { display: flex; gap: 16px; align-items: baseline; margin: 8px 0 16px; }
+  .toolbar-row .count { color: var(--mute); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  .empty { text-align: center; padding: 60px 24px; color: var(--mute); }
+  .empty svg { width: 36px; height: 36px; color: var(--whisper); margin-bottom: 12px; }
+
+  .paginate { display: flex; gap: 8px; justify-content: center; margin-top: 32px; }
+  .paginate a, .paginate .current {
+    min-width: 36px; padding: 8px 12px; font-size: 13px;
+    border: 1px solid var(--hairline-strong); border-radius: var(--radius);
+    text-decoration: none; color: var(--ink-soft); background: var(--paper);
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .pagination .current { background: var(--primary); color: white; border-color: var(--primary); }
+  .paginate .current { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 600; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="catalog-head">
-  <h1>Ветврачи</h1>
-  <div class="tab-switch">
-    <a href="{% url 'clinics:public_clinic_list' %}">🏥 Клиники</a>
-    <a href="{% url 'clinics:public_vet_list' %}" class="active">👨‍⚕️ Врачи</a>
+
+<div class="head-bar">
+  <div>
+    <div class="eyebrow mb-1">Каталог</div>
+    <h1>Ветеринарные врачи</h1>
+  </div>
+  <div class="switch">
+    <a href="{% url 'clinics:public_clinic_list' %}">Клиники</a>
+    <a href="{% url 'clinics:public_vet_list' %}" class="is-active">Врачи</a>
   </div>
 </div>
 
-<form method="get" id="catalog-form">
-  <div class="search-bar">
-    <input type="search" name="q" value="{{ q }}" placeholder="Имя врача, специализация, клиника…">
-    <button type="submit" class="btn">Найти</button>
-  </div>
-
-  <div class="filter-row">
+<form method="get">
+  <div class="filterbar">
+    <input type="search" name="q" value="{{ q }}" placeholder="Имя, специализация, клиника">
     <select name="city" onchange="this.form.submit()">
       <option value="">Все города</option>
-      {% for c in cities %}
-        <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
-      {% endfor %}
+      {% for c in cities %}<option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>{% endfor %}
     </select>
     <select name="sort" onchange="this.form.submit()">
       <option value="rating"     {% if sort == 'rating' %}selected{% endif %}>По рейтингу</option>
-      <option value="price"      {% if sort == 'price' %}selected{% endif %}>Дешевле</option>
-      <option value="experience" {% if sort == 'experience' %}selected{% endif %}>Опытнее</option>
+      <option value="price"      {% if sort == 'price' %}selected{% endif %}>Сначала дешевле</option>
+      <option value="experience" {% if sort == 'experience' %}selected{% endif %}>По стажу</option>
     </select>
     <input type="number" name="price_max" value="{{ filters.price_max }}" placeholder="Цена до, ₽" onchange="this.form.submit()">
+    <label class="toggle"><input type="checkbox" name="online"     value="1" {% if filters.online %}checked{% endif %}     onchange="this.form.submit()">Онлайн</label>
+    <label class="toggle"><input type="checkbox" name="house_call" value="1" {% if filters.house_call %}checked{% endif %} onchange="this.form.submit()">На дому</label>
+    {% if q or selected_city or filters.online or filters.house_call or filters.price_max or selected_spec %}
+      <a href="{% url 'clinics:public_vet_list' %}" class="link-quiet" style="align-self:center;font-size:13px">Сбросить</a>
+    {% endif %}
   </div>
 
-  <div class="toggle-chips">
-    <label><input type="checkbox" name="online"     value="1" {% if filters.online %}checked{% endif %}     onchange="this.form.submit()"><span>💬 Онлайн</span></label>
-    <label><input type="checkbox" name="house_call" value="1" {% if filters.house_call %}checked{% endif %} onchange="this.form.submit()"><span>🚗 На дому</span></label>
-  </div>
-
-  <div class="spec-chips">
-    <a class="spec-chip {% if not selected_spec %}active{% endif %}" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}">Все</a>
+  <div class="rail">
+    <a href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}" {% if not selected_spec %}class="is-active"{% endif %}>Все специальности</a>
     {% for s in specs %}
-      <a class="spec-chip {% if s.slug == selected_spec %}active{% endif %}"
-         href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}spec={{ s.slug }}">{{ s.icon }} {{ s.name }}</a>
+      <a href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}spec={{ s.slug }}" {% if s.slug == selected_spec %}class="is-active"{% endif %}>{{ s.name }}</a>
     {% endfor %}
   </div>
 </form>
+
+<div class="toolbar-row">
+  {% if is_paginated %}
+    <span class="count num">{{ page_obj.paginator.count }} {{ page_obj.paginator.count|plural_ru:"врач,врача,врачей" }}</span>
+  {% else %}
+    <span class="count num">{{ vets|length }} {{ vets|length|plural_ru:"врач,врача,врачей" }}</span>
+  {% endif %}
+</div>
 
 {% if vets %}
 <div class="vet-grid">
   {% for vet in vets %}
     <a class="vet-card" href="{% url 'clinics:public_vet_detail' vet.pk %}">
-      <div class="vet-avatar">
-        {% if vet.photo %}
-          <img src="{{ vet.photo.url }}" alt="{{ vet.display_name }}">
-        {% else %}
-          {{ vet.display_name|slice:":1" }}
-        {% endif %}
+      <div class="vet-thumb">
+        {% if vet.photo %}<img src="{{ vet.photo.url }}" alt="">{% else %}{{ vet.display_name|slice:":1" }}{% endif %}
       </div>
       <div class="vet-body">
-        <h3>{{ vet.display_name }}</h3>
-        {% if vet.clinic %}<div class="vet-clinic">🏥 {{ vet.clinic.name }}{% if vet.clinic.city %} · {{ vet.clinic.city }}{% endif %}</div>{% endif %}
-        <div class="vet-spec">
-          {% for s in vet.specializations.all %}<span>{{ s.icon }} {{ s.name }}</span>{% endfor %}
+        <div class="vet-name">{{ vet.display_name }}</div>
+        {% if vet.clinic %}
+          <div class="vet-clinic"><svg class="icon"><use href="#i-map-pin"/></svg> {{ vet.clinic.name }}{% if vet.clinic.city %} · {{ vet.clinic.city }}{% endif %}</div>
+        {% endif %}
+        <div class="vet-specs">
+          {% for s in vet.specializations.all %}<span class="tag">{{ s.name }}</span>{% endfor %}
         </div>
-        <div class="vet-rating">
-          <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= vet.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-          <strong>{{ vet.rating|floatformat:1 }}</strong>
-          <span class="text-muted">· {{ vet.reviews_count }} отз.</span>
-        </div>
-        <div class="vet-meta">
-          {% if vet.experience_years %}<span>стаж <strong>{{ vet.experience_years }} лет</strong></span>{% endif %}
-          {% if vet.price_consultation %}<span>от <strong>{{ vet.price_consultation|floatformat:0 }} ₽</strong></span>{% endif %}
+        <div class="vet-stats">
+          <span class="rating-num num">{{ vet.rating|floatformat:1 }}</span>
+          {% stars vet.rating %}
+          <span class="muted num">{{ vet.reviews_count }} {{ vet.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</span>
+          {% if vet.experience_years %}<span class="muted num">стаж {{ vet.experience_years }} {{ vet.experience_years|plural_ru:"год,года,лет" }}</span>{% endif %}
+          <span class="price num">от {{ vet.price_consultation|floatformat:0 }} ₽</span>
         </div>
       </div>
     </a>
@@ -162,18 +156,24 @@
 </div>
 
 {% if is_paginated %}
-<div class="pagination">
-  {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">←</a>{% endif %}
+<div class="paginate">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}"><svg class="icon"><use href="#i-arrow-l"/></svg> Назад</a>
+  {% endif %}
   <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-  {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">→</a>{% endif %}
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}">Вперёд <svg class="icon"><use href="#i-arrow-r"/></svg></a>
+  {% endif %}
 </div>
 {% endif %}
 
 {% else %}
-<div class="empty-state">
-  <div style="font-size:3rem;margin-bottom:12px">🔍</div>
-  <h3>Никого не нашлось</h3>
-  <a href="{% url 'clinics:public_vet_list' %}" class="btn mt-3">Сбросить фильтры</a>
+<div class="empty">
+  <svg class="icon icon-xl"><use href="#i-search"/></svg>
+  <h3>Не найдено</h3>
+  <p class="muted">Попробуйте сбросить фильтры или поискать в другом городе.</p>
+  <a href="{% url 'clinics:public_vet_list' %}" class="btn btn-outline btn-sm mt-3">Сбросить</a>
 </div>
 {% endif %}
+
 {% endblock %}

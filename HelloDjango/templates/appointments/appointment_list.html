@@ -1,57 +1,74 @@
 {% extends 'base.html' %}
-{% block title %}Мои записи — EKM-PET{% endblock %}
+{% load ru_filters vetka %}
+{% block title %}Мои записи — EKM · vet{% endblock %}
 
 {% block extra_head %}
 <style>
-  .appt-card {
-    display: flex; gap: 12px; padding: 14px;
-    background: var(--white); border: 1px solid var(--border);
-    border-radius: var(--radius); box-shadow: var(--shadow-sm);
-    margin-bottom: 10px; text-decoration: none; color: inherit;
+  .appt-row {
+    display: grid; grid-template-columns: 64px 1fr auto;
+    gap: 18px; padding: 18px 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none; color: inherit;
   }
-  .appt-card:hover { box-shadow: var(--shadow); text-decoration: none; color: inherit; }
+  .appt-row:first-child { border-top: 1px solid var(--hairline); }
+  .appt-row:hover { background: var(--brand-tint); text-decoration: none; color: inherit; }
+  .appt-row:hover .appt-vet-name { color: var(--brand); }
   .appt-date {
-    background: var(--primary-bg); border-radius: var(--radius-sm);
-    padding: 10px 14px; text-align: center; min-width: 70px;
+    text-align: center;
+    border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius);
+    padding: 8px 0;
   }
-  .appt-date .day { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); }
-  .appt-date .mon { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; }
-  .appt-info { flex: 1; }
+  .appt-date .day  { font-family: var(--font-serif); font-size: 22px; font-weight: 600; line-height: 1; }
+  .appt-date .mon  { font-size: 10px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; font-weight: 600; }
+  .appt-vet-name { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .appt-meta { color: var(--mute); font-size: 13px; }
   .appt-status {
-    display: inline-block; padding: 3px 10px; border-radius: 50px;
-    font-size: .72rem; font-weight: 700;
+    display: inline-block; padding: 3px 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    border: 1px solid; border-radius: 3px;
+    white-space: nowrap;
   }
-  .st-new      { background: #fffbeb; color: #92400e; }
-  .st-confirmed{ background: #e6faf6; color: #0a7a6a; }
-  .st-done     { background: var(--gray-light); color: var(--text-muted); }
-  .st-cancelled{ background: #fff0f3; color: #c0143c; }
+  .st-new      { color: var(--warn);     background: #fdf4dd; border-color: #f0dca0; }
+  .st-confirmed{ color: var(--brand);    background: var(--brand-soft); border-color: rgba(10,77,63,.18); }
+  .st-done     { color: var(--mute);     background: #f3f1ea; border-color: var(--hairline-strong); }
+  .st-cancelled{ color: var(--critical); background: #fbece9; border-color: #f3d3cd; }
+
+  .empty { text-align: center; padding: 60px 24px; }
+  .empty svg { width: 36px; height: 36px; color: var(--whisper); margin-bottom: 12px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<h1>📅 Мои записи</h1>
+
+<div class="eyebrow mb-1">Личный кабинет</div>
+<h1 style="margin-bottom:24px">Мои записи</h1>
 
 {% if appointments %}
   {% for appt in appointments %}
-    <a class="appt-card" href="{{ appt.get_absolute_url }}">
+    <a class="appt-row" href="{{ appt.get_absolute_url }}">
       <div class="appt-date">
-        <div class="day">{{ appt.scheduled_at|date:"d" }}</div>
+        <div class="day num">{{ appt.scheduled_at|date:"d" }}</div>
         <div class="mon">{{ appt.scheduled_at|date:"M" }}</div>
       </div>
-      <div class="appt-info">
-        <div style="font-weight:700">{{ appt.vet.display_name }}</div>
-        <div class="text-muted text-sm">{{ appt.scheduled_at|date:"H:i" }} · {{ appt.get_kind_display }}{% if appt.clinic %} · {{ appt.clinic.name }}{% endif %}</div>
-        {% if appt.pet %}<div class="text-sm">🐾 {{ appt.pet.name }}</div>{% endif %}
+      <div>
+        <div class="appt-vet-name">{{ appt.vet.display_name }}</div>
+        <div class="appt-meta">
+          {{ appt.scheduled_at|date:"H:i" }} · {{ appt.get_kind_display }}{% if appt.clinic %} · {{ appt.clinic.name }}{% endif %}{% if appt.pet %} · {{ appt.pet.name }}{% endif %}
+        </div>
+      </div>
+      <div>
         <span class="appt-status st-{{ appt.status }}">{{ appt.get_status_display }}</span>
       </div>
     </a>
   {% endfor %}
 {% else %}
-  <div class="card text-center" style="padding:40px 20px">
-    <div style="font-size:3rem;margin-bottom:12px">📅</div>
+  <div class="empty">
+    <svg class="icon icon-xl"><use href="#i-calendar"/></svg>
     <h3>Записей пока нет</h3>
-    <p class="text-muted">Найдите врача в каталоге и запишитесь на приём</p>
-    <a href="{% url 'clinics:public_vet_list' %}" class="btn mt-3">Найти врача</a>
+    <p class="muted">Найдите врача в каталоге и оставьте заявку на приём.</p>
+    <a href="{% url 'clinics:public_vet_list' %}" class="btn btn-primary mt-3">Найти врача</a>
   </div>
 {% endif %}
+
 {% endblock %}

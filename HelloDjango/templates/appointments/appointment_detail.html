@@ -1,64 +1,111 @@
 {% extends 'base.html' %}
-{% block title %}Запись · {{ appointment.vet.display_name }} — EKM-PET{% endblock %}
+{% load ru_filters vetka %}
+{% block title %}Запись от {{ appointment.scheduled_at|date:"d.m.Y" }} — EKM · vet{% endblock %}
+
+{% block extra_head %}
+<style>
+  .wrap { max-width: 720px; margin: 0 auto; }
+  .head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .head-row h1 { font-size: 32px; }
+  .appt-status {
+    display: inline-block; padding: 4px 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    border: 1px solid; border-radius: 3px;
+  }
+  .st-new      { color: var(--warn);     background: #fdf4dd; border-color: #f0dca0; }
+  .st-confirmed{ color: var(--brand);    background: var(--brand-soft); border-color: rgba(10,77,63,.18); }
+  .st-done     { color: var(--mute);     background: #f3f1ea; border-color: var(--hairline-strong); }
+  .st-cancelled{ color: var(--critical); background: #fbece9; border-color: #f3d3cd; }
+
+  .kv {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px 28px;
+    padding: 22px;
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+  }
+  .kv .lbl { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; }
+  .kv .val { font-size: 15px; color: var(--ink); }
+  .kv .val a { color: var(--brand); text-decoration: none; border-bottom: 1px solid var(--brand-soft); }
+  .kv .val a:hover { border-color: var(--brand); }
+
+  .note {
+    padding: 16px 18px;
+    background: var(--brand-tint);
+    border-left: 2px solid var(--brand);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    white-space: pre-line;
+    margin-top: 18px;
+  }
+  .note .lbl { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-bottom: 4px; }
+</style>
+{% endblock %}
 
 {% block content %}
-<a href="{% url 'appointments:list' %}" class="text-muted text-sm" style="text-decoration:none">← Все записи</a>
 
-<div class="card mt-2">
-  <div class="flex justify-between items-center mb-2">
-    <h2 class="mb-0">{{ appointment.scheduled_at|date:"d.m.Y H:i" }}</h2>
-    <span class="badge badge-{% if appointment.status == 'confirmed' %}success{% elif appointment.status == 'cancelled' %}danger{% elif appointment.status == 'done' %}gray{% else %}warning{% endif %}">{{ appointment.get_status_display }}</span>
+<div class="wrap">
+
+  <a href="{% url 'appointments:list' %}" class="link-quiet small">
+    <svg class="icon"><use href="#i-arrow-l"/></svg> Все записи
+  </a>
+
+  <div class="eyebrow mt-2 mb-1">Запись на приём</div>
+  <div class="head-row">
+    <h1 class="num" style="margin:0">{{ appointment.scheduled_at|date:"d.m.Y, H:i" }}</h1>
+    <span class="appt-status st-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
   </div>
 
-  <div class="divider"></div>
-
-  <div class="info-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+  <div class="kv">
     <div>
-      <div class="text-muted text-xs">Врач</div>
-      <div><a href="{{ appointment.vet.get_absolute_url }}">{{ appointment.vet.display_name }}</a></div>
+      <div class="lbl">Врач</div>
+      <div class="val"><a href="{{ appointment.vet.get_absolute_url }}">{{ appointment.vet.display_name }}</a></div>
     </div>
     {% if appointment.clinic %}
     <div>
-      <div class="text-muted text-xs">Клиника</div>
-      <div><a href="{{ appointment.clinic.get_absolute_url }}">{{ appointment.clinic.name }}</a></div>
+      <div class="lbl">Клиника</div>
+      <div class="val"><a href="{{ appointment.clinic.get_absolute_url }}">{{ appointment.clinic.name }}</a></div>
     </div>
     {% endif %}
     {% if appointment.pet %}
     <div>
-      <div class="text-muted text-xs">Питомец</div>
-      <div>🐾 {{ appointment.pet.name }}</div>
+      <div class="lbl">Питомец</div>
+      <div class="val">{{ appointment.pet.name }}</div>
     </div>
     {% endif %}
     {% if appointment.service %}
     <div>
-      <div class="text-muted text-xs">Услуга</div>
-      <div>{{ appointment.service.name }} — {{ appointment.service.price|floatformat:0 }} ₽</div>
+      <div class="lbl">Услуга</div>
+      <div class="val">{{ appointment.service.name }} — <span class="num">{{ appointment.service.price|floatformat:0 }} ₽</span></div>
     </div>
     {% endif %}
     <div>
-      <div class="text-muted text-xs">Формат</div>
-      <div>{{ appointment.get_kind_display }}</div>
+      <div class="lbl">Формат</div>
+      <div class="val">{{ appointment.get_kind_display }}</div>
     </div>
     {% if appointment.contact_phone %}
     <div>
-      <div class="text-muted text-xs">Контакт</div>
-      <div>{{ appointment.contact_phone }}</div>
+      <div class="lbl">Телефон</div>
+      <div class="val num">{{ appointment.contact_phone }}</div>
     </div>
     {% endif %}
   </div>
 
   {% if appointment.reason %}
-    <div class="mt-3">
-      <div class="text-muted text-xs">Причина обращения</div>
-      <div style="white-space:pre-line">{{ appointment.reason }}</div>
+    <div class="note">
+      <div class="lbl">Причина обращения</div>
+      {{ appointment.reason }}
     </div>
   {% endif %}
 
   {% if appointment.vet_note %}
-    <div class="mt-3" style="background:var(--gray-light);padding:12px;border-radius:var(--radius-sm)">
-      <div class="text-muted text-xs">Заметка врача</div>
-      <div style="white-space:pre-line">{{ appointment.vet_note }}</div>
+    <div class="note">
+      <div class="lbl">Заметка врача</div>
+      {{ appointment.vet_note }}
     </div>
   {% endif %}
+
 </div>
+
 {% endblock %}

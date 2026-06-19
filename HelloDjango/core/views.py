@@ -8,6 +8,7 @@ from django.db.models import Count
 
 from users.models import User
 from pets.models import Pet, PetDocument
+from clinics.models import Clinic, VetProfile, Specialization
 
 
 class HomeView(TemplateView):
@@ -15,13 +16,22 @@ class HomeView(TemplateView):
 
 
 def landing_view(request):
-    """Главная страница: лендинг с живыми числами из БД."""
+    """Главная: лендинг каталога ветпомощи."""
     stats = {
-        'users': User.objects.filter(is_superuser=False).count(),
-        'pets': Pet.objects.count(),
-        'docs': PetDocument.objects.count(),
+        'clinics': Clinic.objects.count(),
+        'vets':    VetProfile.objects.filter(is_published=True).count(),
+        'reviews': __import__('reviews').models.Review.objects.filter(is_published=True).count() if Clinic.objects.exists() else 0,
+        'users':   User.objects.filter(is_superuser=False).count(),
+        'pets':    Pet.objects.count(),
     }
-    return render(request, 'core/landing.html', {'stats': stats})
+    ctx = {
+        'stats':       stats,
+        'top_vets':    VetProfile.objects.filter(is_published=True).select_related('user', 'clinic').prefetch_related('specializations').order_by('-rating', '-reviews_count')[:6],
+        'top_clinics': Clinic.objects.order_by('-rating', '-reviews_count')[:4],
+        'specs':       Specialization.objects.all()[:8],
+        'cities':      list(Clinic.objects.exclude(city='').values_list('city', flat=True).distinct().order_by('city')),
+    }
+    return render(request, 'core/landing.html', ctx)
 
 class DashboardRedirectView(LoginRequiredMixin, RedirectView):
     def get_redirect_url(self, *args, **kwargs):

@@ -1,174 +1,193 @@
 {% extends 'base.html' %}
-{% load ru_filters %}
-{% block title %}Ветклиники — EKM-PET{% endblock %}
+{% load ru_filters vetka %}
+{% block title %}Клиники — EKM · vet{% endblock %}
 
 {% block extra_head %}
 <style>
-  .catalog-head { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
-  .catalog-head h1 { margin: 0; flex: 1; }
-  .tab-switch { display: inline-flex; background: var(--gray-light); border-radius: 50px; padding: 3px; }
-  .tab-switch a {
-    padding: 7px 16px; border-radius: 50px; font-size: .85rem; font-weight: 600;
-    color: var(--text-muted); text-decoration: none;
+  .head-bar {
+    display: flex; align-items: end; justify-content: space-between; gap: 24px;
+    flex-wrap: wrap; margin-bottom: 12px;
   }
-  .tab-switch a.active { background: var(--white); color: var(--primary); box-shadow: var(--shadow-sm); }
+  .switch {
+    display: inline-flex; border: 1px solid var(--hairline-strong);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .switch a {
+    padding: 8px 16px; font-size: 13px; font-weight: 500;
+    color: var(--ink-soft); text-decoration: none; background: var(--paper);
+    border-right: 1px solid var(--hairline-strong);
+  }
+  .switch a:last-child { border-right: none; }
+  .switch a.is-active { background: var(--ink); color: var(--paper); }
+  .switch a:hover:not(.is-active) { background: var(--brand-soft); color: var(--ink); }
 
-  .search-bar { display: flex; gap: 8px; margin-bottom: 12px; }
-  .search-bar input {
-    flex: 1; padding: 12px 18px;
-    border: 1.5px solid var(--border); border-radius: 50px;
-    font-size: .92rem; font-family: inherit; outline: none; background: var(--white);
+  .clinic-list { display: grid; gap: 0; }
+  .clinic-row {
+    display: grid;
+    grid-template-columns: 88px 1fr auto;
+    gap: 24px; padding: 24px 0;
+    border-bottom: 1px solid var(--hairline);
+    text-decoration: none; color: inherit;
   }
-  .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,99,255,.12); }
+  .clinic-row:hover { background: var(--brand-tint); text-decoration: none; color: inherit; }
+  .clinic-row:hover .clinic-name { color: var(--brand); }
+  .clinic-row:first-child { padding-top: 24px; border-top: 1px solid var(--hairline); }
+  .clinic-thumb {
+    width: 88px; height: 88px;
+    background: var(--brand-soft);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--brand);
+    font-family: var(--font-serif);
+    font-size: 30px; font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .clinic-body { min-width: 0; }
+  .clinic-name {
+    font-family: var(--font-serif); font-size: 22px; font-weight: 600;
+    letter-spacing: -0.01em; line-height: 1.2;
+    margin-bottom: 4px;
+  }
+  .clinic-meta {
+    color: var(--mute); font-size: 13px;
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 8px;
+  }
+  .clinic-meta .dot { width: 3px; height: 3px; background: var(--mute); border-radius: 50%; }
+  .clinic-meta svg { width: 13px; height: 13px; }
+  .clinic-tags { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-  .filter-row select {
-    padding: 9px 14px; border-radius: 50px;
-    border: 1.5px solid var(--border); background: var(--white);
-    font-size: .85rem; font-family: inherit; outline: none; color: var(--text);
+  .clinic-aside { text-align: right; min-width: 110px; }
+  .clinic-rating-big {
+    font-family: var(--font-serif);
+    font-size: 26px; font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1; margin-bottom: 4px;
   }
-  .toggle-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
-  .toggle-chips label {
-    padding: 7px 14px; border-radius: 50px; font-size: .8rem; font-weight: 500;
-    border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted);
-    cursor: pointer; user-select: none; white-space: nowrap;
-  }
-  .toggle-chips input { display: none; }
-  .toggle-chips input:checked + span {}
-  .toggle-chips label:has(input:checked) {
-    background: var(--primary); color: white; border-color: var(--primary);
-  }
+  .clinic-rating-meta { font-size: 12px; color: var(--mute); }
 
-  .spec-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; overflow-x: auto; }
-  .spec-chips::-webkit-scrollbar { display: none; }
-  .spec-chip {
-    padding: 7px 14px; border-radius: 50px; font-size: .82rem; font-weight: 500;
-    border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted);
-    text-decoration: none; white-space: nowrap;
-  }
-  .spec-chip:hover { border-color: var(--primary); color: var(--primary); text-decoration: none; }
-  .spec-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+  .toolbar-row { display: flex; gap: 16px; align-items: baseline; margin-bottom: 4px; }
+  .toolbar-row h1 { flex: 1; }
+  .count { color: var(--mute); font-size: 14px; font-variant-numeric: tabular-nums; }
 
-  .clinic-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
-  @media (min-width: 720px) { .clinic-grid { grid-template-columns: 1fr 1fr; } }
+  .empty { text-align: center; padding: 60px 24px; color: var(--mute); }
+  .empty svg { width: 36px; height: 36px; color: var(--whisper); margin-bottom: 12px; }
 
-  .clinic-card {
-    background: var(--white); border-radius: var(--radius);
-    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
-    padding: 16px; text-decoration: none; color: inherit;
-    display: flex; flex-direction: column; gap: 8px;
-    transition: transform var(--transition), box-shadow var(--transition);
+  .paginate { display: flex; gap: 8px; justify-content: center; margin-top: 32px; }
+  .paginate a, .paginate .current {
+    min-width: 36px; padding: 8px 12px; font-size: 13px;
+    border: 1px solid var(--hairline-strong); border-radius: var(--radius);
+    text-decoration: none; color: var(--ink-soft); background: var(--paper);
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  .clinic-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); text-decoration: none; color: inherit; }
-  .clinic-card h3 { margin: 0; font-size: 1.05rem; }
-  .clinic-card .meta { color: var(--text-muted); font-size: .85rem; }
-  .clinic-card .rating { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 600; }
-  .clinic-card .stars { color: #ffb347; letter-spacing: 1px; }
-  .clinic-card .badges { display: flex; gap: 4px; flex-wrap: wrap; }
-  .mini-badge {
-    padding: 3px 8px; border-radius: 50px; font-size: .68rem; font-weight: 600;
-    background: var(--primary-bg); color: var(--primary-dark);
-  }
+  .paginate .current { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: 600; }
 
-  .empty-state { text-align: center; padding: 48px 16px; color: var(--text-muted); }
-  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
-
-  .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
-  .pagination a, .pagination .current {
-    padding: 7px 14px; border-radius: 50px; font-size: .82rem;
-    background: var(--white); border: 1.5px solid var(--border);
-    text-decoration: none; color: var(--text);
+  @media (max-width: 720px) {
+    .clinic-row { grid-template-columns: 64px 1fr; gap: 16px; }
+    .clinic-thumb { width: 64px; height: 64px; font-size: 22px; }
+    .clinic-aside { grid-column: 1 / -1; text-align: left; padding-top: 4px; border-top: 1px dashed var(--hairline); padding-top: 12px; }
+    .clinic-rating-big { font-size: 20px; display: inline-block; margin-right: 8px; }
   }
-  .pagination .current { background: var(--primary); color: white; border-color: var(--primary); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="catalog-head">
-  <h1>Ветклиники</h1>
-  <div class="tab-switch">
-    <a href="{% url 'clinics:public_clinic_list' %}" class="active">🏥 Клиники</a>
-    <a href="{% url 'clinics:public_vet_list' %}">👨‍⚕️ Врачи</a>
+
+<div class="head-bar">
+  <div>
+    <div class="eyebrow mb-1">Каталог</div>
+    <h1>Ветеринарные клиники</h1>
+  </div>
+  <div class="switch">
+    <a href="{% url 'clinics:public_clinic_list' %}" class="is-active">Клиники</a>
+    <a href="{% url 'clinics:public_vet_list' %}">Врачи</a>
   </div>
 </div>
 
 <form method="get" id="catalog-form">
-  <div class="search-bar">
-    <input type="search" name="q" value="{{ q }}" placeholder="Название клиники, услуга, специализация…">
-    <button type="submit" class="btn">Найти</button>
-  </div>
-
-  <div class="filter-row">
+  <div class="filterbar">
+    <input type="search" name="q" value="{{ q }}" placeholder="Название, услуга, специализация">
     <select name="city" onchange="this.form.submit()">
       <option value="">Все города</option>
-      {% for c in cities %}
-        <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
-      {% endfor %}
+      {% for c in cities %}<option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>{% endfor %}
     </select>
     <select name="sort" onchange="this.form.submit()">
-      <option value="rating" {% if sort == 'rating' %}selected{% endif %}>По рейтингу</option>
+      <option value="rating"  {% if sort == 'rating' %}selected{% endif %}>По рейтингу</option>
       <option value="reviews" {% if sort == 'reviews' %}selected{% endif %}>Больше отзывов</option>
-      <option value="name" {% if sort == 'name' %}selected{% endif %}>По названию</option>
+      <option value="name"    {% if sort == 'name' %}selected{% endif %}>По названию</option>
     </select>
+    <label class="toggle"><input type="checkbox" name="online" value="1" {% if filters.online %}checked{% endif %} onchange="this.form.submit()">Онлайн</label>
+    <label class="toggle"><input type="checkbox" name="h24"    value="1" {% if filters.h24 %}checked{% endif %} onchange="this.form.submit()">24/7</label>
+    <label class="toggle"><input type="checkbox" name="surgery" value="1" {% if filters.surgery %}checked{% endif %} onchange="this.form.submit()">Хирургия</label>
+    <label class="toggle"><input type="checkbox" name="lab"    value="1" {% if filters.lab %}checked{% endif %} onchange="this.form.submit()">Лаборатория</label>
+    {% if q or selected_city or filters.online or filters.h24 or filters.surgery or filters.lab or selected_spec %}
+      <a href="{% url 'clinics:public_clinic_list' %}" class="link-quiet" style="align-self:center;font-size:13px">Сбросить</a>
+    {% endif %}
   </div>
 
-  <div class="toggle-chips">
-    <label><input type="checkbox" name="online" value="1" {% if filters.online %}checked{% endif %} onchange="this.form.submit()"><span>💬 Онлайн</span></label>
-    <label><input type="checkbox" name="h24"    value="1" {% if filters.h24 %}checked{% endif %} onchange="this.form.submit()"><span>🌙 24/7</span></label>
-    <label><input type="checkbox" name="surgery" value="1" {% if filters.surgery %}checked{% endif %} onchange="this.form.submit()"><span>🔪 Хирургия</span></label>
-    <label><input type="checkbox" name="lab"    value="1" {% if filters.lab %}checked{% endif %} onchange="this.form.submit()"><span>🧪 Лаборатория</span></label>
-  </div>
-
-  <div class="spec-chips">
-    <a class="spec-chip {% if not selected_spec %}active{% endif %}" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}">Все</a>
+  <div class="rail">
+    <a href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}" {% if not selected_spec %}class="is-active"{% endif %}>Все специальности</a>
     {% for s in specs %}
-      <a class="spec-chip {% if s.slug == selected_spec %}active{% endif %}"
-         href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}spec={{ s.slug }}">{{ s.icon }} {{ s.name }}</a>
+      <a href="?{% if q %}q={{ q }}&{% endif %}{% if selected_city %}city={{ selected_city }}&{% endif %}spec={{ s.slug }}" {% if s.slug == selected_spec %}class="is-active"{% endif %}>{{ s.name }}</a>
     {% endfor %}
   </div>
 </form>
 
+<div class="toolbar-row">
+  {% if is_paginated %}
+    <span class="count num">{{ page_obj.paginator.count }} {{ page_obj.paginator.count|plural_ru:"клиника,клиники,клиник" }}</span>
+  {% else %}
+    <span class="count num">{{ clinics|length }} {{ clinics|length|plural_ru:"клиника,клиники,клиник" }}</span>
+  {% endif %}
+</div>
+
 {% if clinics %}
-<div class="clinic-grid">
+<div class="clinic-list">
   {% for clinic in clinics %}
-    <a class="clinic-card" href="{% url 'clinics:public_clinic_detail' clinic.pk %}">
-      <h3>{{ clinic.name }}</h3>
-      <div class="rating">
-        <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= clinic.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-        <span>{{ clinic.rating|floatformat:1 }}</span>
-        <span class="text-muted">·</span>
-        <span class="text-muted text-sm">{{ clinic.reviews_count }} {{ clinic.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</span>
+    <a class="clinic-row" href="{% url 'clinics:public_clinic_detail' clinic.pk %}">
+      <div class="clinic-thumb">{{ clinic.name|slice:":1" }}</div>
+      <div class="clinic-body">
+        <div class="clinic-name">{{ clinic.name }}</div>
+        <div class="clinic-meta">
+          <span><svg class="icon"><use href="#i-map-pin"/></svg> {{ clinic.city|default:"Россия" }}{% if clinic.address %} · {{ clinic.address|truncatechars:60 }}{% endif %}</span>
+          {% if clinic.phone %}<span class="dot"></span><span><svg class="icon"><use href="#i-phone"/></svg> {{ clinic.phone }}</span>{% endif %}
+        </div>
+        <div class="clinic-tags">
+          {% if clinic.is_24h %}<span class="tag">Круглосуточно</span>{% endif %}
+          {% if clinic.accepts_online %}<span class="tag">Онлайн-консультации</span>{% endif %}
+          {% if clinic.has_lab %}<span class="tag">Своя лаборатория</span>{% endif %}
+          {% if clinic.has_surgery %}<span class="tag">Хирургия</span>{% endif %}
+        </div>
       </div>
-      <div class="meta">📍 {{ clinic.city }}{% if clinic.address %} · {{ clinic.address|truncatechars:60 }}{% endif %}</div>
-      {% if clinic.phone %}<div class="meta">📞 {{ clinic.phone }}</div>{% endif %}
-      <div class="badges">
-        {% if clinic.is_24h %}<span class="mini-badge">24/7</span>{% endif %}
-        {% if clinic.accepts_online %}<span class="mini-badge">Онлайн</span>{% endif %}
-        {% if clinic.has_lab %}<span class="mini-badge">Лаборатория</span>{% endif %}
-        {% if clinic.has_surgery %}<span class="mini-badge">Хирургия</span>{% endif %}
+      <div class="clinic-aside">
+        <div class="clinic-rating-big num">{{ clinic.rating|floatformat:1 }}</div>
+        {% stars clinic.rating %}
+        <div class="clinic-rating-meta num">{{ clinic.reviews_count }} {{ clinic.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</div>
       </div>
     </a>
   {% endfor %}
 </div>
 
 {% if is_paginated %}
-<div class="pagination">
+<div class="paginate">
   {% if page_obj.has_previous %}
-    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}">←</a>
+    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.previous_page_number }}"><svg class="icon"><use href="#i-arrow-l"/></svg> Назад</a>
   {% endif %}
   <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
   {% if page_obj.has_next %}
-    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}">→</a>
+    <a href="?{% if q %}q={{ q }}&{% endif %}page={{ page_obj.next_page_number }}">Вперёд <svg class="icon"><use href="#i-arrow-r"/></svg></a>
   {% endif %}
 </div>
 {% endif %}
 
 {% else %}
-<div class="empty-state">
-  <div class="icon">🔍</div>
-  <h3>Ничего не нашлось</h3>
-  <p>Попробуйте сбросить фильтры или поискать в другом городе.</p>
-  <a href="{% url 'clinics:public_clinic_list' %}" class="btn mt-3">Сбросить</a>
+<div class="empty">
+  <svg class="icon icon-xl"><use href="#i-search"/></svg>
+  <h3>Не найдено</h3>
+  <p class="muted">Попробуйте сбросить фильтры или поискать в другом городе.</p>
+  <a href="{% url 'clinics:public_clinic_list' %}" class="btn btn-outline btn-sm mt-3">Сбросить фильтры</a>
 </div>
 {% endif %}
+
 {% endblock %}

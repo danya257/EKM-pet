@@ -1,176 +1,245 @@
 {% extends 'base.html' %}
-{% load ru_filters %}
-{% block title %}{{ vet.display_name }} — EKM-PET{% endblock %}
+{% load ru_filters vetka %}
+{% block title %}{{ vet.display_name }} — EKM · vet{% endblock %}
 
 {% block extra_head %}
 <style>
-  .vet-hero {
-    display: flex; gap: 18px; align-items: flex-start;
-    background: linear-gradient(135deg, #6c63ff 0%, #00c9a7 100%);
-    color: white; border-radius: var(--radius);
-    padding: 24px; margin-bottom: 16px;
-  }
-  .vet-hero .avatar {
-    width: 110px; height: 110px; border-radius: 50%;
-    background: rgba(255,255,255,.18); border: 3px solid rgba(255,255,255,.35);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.8rem; font-weight: 700; overflow: hidden; flex-shrink: 0;
-  }
-  .vet-hero .avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .vet-hero h1 { color: white; margin: 0 0 6px; font-size: 1.5rem; }
-  .vet-hero .clinic { color: rgba(255,255,255,.85); font-size: .92rem; margin-bottom: 8px; }
-  .vet-hero .stars { color: #ffd76b; letter-spacing: 2px; font-size: 1.05rem; }
-  .vet-hero .rating-line { display: flex; align-items: center; gap: 8px; font-weight: 600; }
-  .vet-hero .specs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-  .vet-hero .specs span {
-    background: rgba(255,255,255,.2); padding: 4px 10px; border-radius: 50px;
-    font-size: .78rem; font-weight: 600;
-  }
-  .vet-hero .toggles { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
-  .vet-hero .toggles span {
-    background: rgba(255,255,255,.18); padding: 5px 10px; border-radius: 50px;
-    font-size: .75rem;
-  }
+  .crumbs { font-size: 13px; color: var(--mute); margin-bottom: 18px; }
+  .crumbs a { color: var(--mute); text-decoration: none; }
+  .crumbs a:hover { color: var(--ink); text-decoration: underline; }
+  .crumbs .sep { margin: 0 6px; }
 
-  .info-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-  @media (max-width:520px) { .info-cards { grid-template-columns: 1fr; } }
-  .info-card {
-    background: var(--gray-light); border-radius: var(--radius-sm); padding: 14px;
+  .vet-head {
+    display: grid;
+    grid-template-columns: 156px 1fr 200px;
+    gap: 32px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: 36px;
   }
-  .info-card .lbl { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; font-weight: 700; margin-bottom: 4px; }
-  .info-card .val { font-size: 1.05rem; font-weight: 700; }
-
-  .cta-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .cta-row .btn { flex: 1; min-width: 160px; }
-
-  .section-h { font-size: 1.05rem; font-weight: 700; margin: 18px 0 10px; }
-
-  .service-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0; border-bottom: 1px solid var(--border);
+  .vet-portrait {
+    width: 156px; height: 156px; border-radius: var(--radius);
+    background: var(--brand-soft); border: 1px solid var(--hairline);
+    color: var(--brand); font-family: var(--font-serif);
+    font-size: 60px; font-weight: 600; letter-spacing: -0.03em;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
-  .service-row:last-child { border-bottom: none; }
-  .service-row .price { font-weight: 700; color: var(--primary); white-space: nowrap; margin-left: 12px; }
+  .vet-portrait img { width: 100%; height: 100%; object-fit: cover; }
 
-  .review-item {
-    padding: 14px 0; border-bottom: 1px solid var(--border);
+  .vet-head h1 { font-size: 40px; font-weight: 600; line-height: 1.1; margin-bottom: 12px; letter-spacing: -0.02em; }
+  .vet-clinic-line { color: var(--ink-soft); font-size: 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .vet-clinic-line svg { width: 16px; height: 16px; color: var(--mute); }
+  .vet-clinic-line a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--hairline-strong); }
+  .vet-clinic-line a:hover { color: var(--brand); border-color: var(--brand); }
+  .vet-meta-line { display: flex; gap: 22px; flex-wrap: wrap; color: var(--ink-soft); font-size: 14px; margin-top: 12px; }
+  .vet-meta-line .num-strong { font-family: var(--font-serif); font-weight: 600; color: var(--ink); font-size: 16px; }
+
+  .vet-rating-box { text-align: right; }
+  .vet-rating-box .big {
+    font-family: var(--font-serif); font-size: 56px; font-weight: 600;
+    letter-spacing: -0.03em; line-height: 1; color: var(--ink);
   }
-  .review-item:last-child { border-bottom: none; }
-  .review-head { display: flex; gap: 10px; align-items: center; margin-bottom: 4px; }
-  .review-head .author { font-weight: 600; font-size: .9rem; }
-  .review-head .stars { color: #ffb347; letter-spacing: 1px; font-size: .85rem; }
-  .review-head .date { color: var(--text-muted); font-size: .75rem; margin-left: auto; }
-  .review-item .text { font-size: .9rem; margin: 4px 0; }
-  .review-prosc { display: flex; gap: 12px; margin-top: 6px; font-size: .82rem; }
-  .review-prosc .pros { color: #0a7a6a; }
-  .review-prosc .cons { color: #c0143c; }
+  .vet-rating-box .stars { margin: 8px 0; }
+  .vet-rating-box .stars svg { width: 18px; height: 18px; }
+  .vet-rating-box .sub { font-size: 13px; color: var(--mute); }
 
-  .no-reviews { text-align: center; padding: 24px 0; color: var(--text-muted); }
+  .vet-specs-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .vet-flags { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: var(--ink-soft); }
+  .vet-flags .flag { display: inline-flex; align-items: center; gap: 6px; }
+  .vet-flags .flag svg { color: var(--brand); width: 14px; height: 14px; }
+
+  .cta-row { display: flex; gap: 10px; margin-bottom: 36px; flex-wrap: wrap; }
+
+  .grid-main { display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start; }
+  .section { margin-bottom: 36px; }
+  .section h2 { font-size: 24px; margin-bottom: 14px; }
+  .section .body-prose { font-size: 15px; line-height: 1.65; color: var(--ink-soft); white-space: pre-line; }
+
+  .svc-row {
+    display: flex; justify-content: space-between; gap: 24px;
+    padding: 12px 0; border-bottom: 1px solid var(--hairline);
+    align-items: baseline;
+  }
+  .svc-row:last-child { border-bottom: none; }
+  .svc-row .svc-name { font-size: 14px; }
+  .svc-row .svc-price { font-family: var(--font-serif); font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+  .review { padding: 18px 0; border-bottom: 1px solid var(--hairline); }
+  .review:last-child { border-bottom: none; }
+  .review-head { display: flex; gap: 12px; align-items: baseline; margin-bottom: 6px; }
+  .review .author { font-weight: 600; font-size: 14px; }
+  .review .date   { color: var(--mute); font-size: 12px; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .review .body   { font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+  .review .prosc  { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 8px; font-size: 13px; }
+  .review .prosc .lbl { font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .review .prosc .pros { color: var(--brand); }
+  .review .prosc .cons { color: var(--critical); }
+
+  .sticky-cta {
+    position: sticky; top: 80px;
+    padding: 22px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    background: var(--paper);
+  }
+  .sticky-cta .price-big {
+    font-family: var(--font-serif); font-size: 32px; font-weight: 600;
+    letter-spacing: -0.02em; color: var(--ink); line-height: 1;
+  }
+  .sticky-cta .price-meta { color: var(--mute); font-size: 13px; margin-bottom: 16px; }
+  .sticky-cta .clinic-mini { padding-top: 16px; margin-top: 16px; border-top: 1px solid var(--hairline); font-size: 13px; color: var(--ink-soft); }
+
+  @media (max-width: 880px) {
+    .vet-head { grid-template-columns: 96px 1fr; gap: 18px; }
+    .vet-portrait { width: 96px; height: 96px; font-size: 38px; }
+    .vet-rating-box { grid-column: 1 / -1; text-align: left; }
+    .vet-rating-box .big { font-size: 40px; display: inline-block; margin-right: 12px; vertical-align: -10px; }
+    .vet-head h1 { font-size: 28px; }
+    .grid-main { grid-template-columns: 1fr; gap: 24px; }
+    .sticky-cta { position: static; }
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="vet-hero">
-  <div class="avatar">
+
+<div class="crumbs">
+  <a href="{% url 'clinics:public_vet_list' %}">Каталог</a>
+  <span class="sep">/</span>
+  <span>Врачи</span>
+  <span class="sep">/</span>
+  <span>{{ vet.display_name }}</span>
+</div>
+
+<div class="vet-head">
+  <div class="vet-portrait">
     {% if vet.photo %}<img src="{{ vet.photo.url }}" alt="{{ vet.display_name }}">{% else %}{{ vet.display_name|slice:":1" }}{% endif %}
   </div>
   <div>
+    <div class="eyebrow mb-1">Ветеринарный врач</div>
     <h1>{{ vet.display_name }}</h1>
     {% if vet.clinic %}
-      <div class="clinic">🏥 <a href="{% url 'clinics:public_clinic_detail' vet.clinic.pk %}" style="color:white;text-decoration:underline">{{ vet.clinic.name }}</a>{% if vet.clinic.city %} · {{ vet.clinic.city }}{% endif %}</div>
+      <div class="vet-clinic-line">
+        <svg class="icon"><use href="#i-map-pin"/></svg>
+        <a href="{% url 'clinics:public_clinic_detail' vet.clinic.pk %}">{{ vet.clinic.name }}</a>
+        {% if vet.clinic.city %}<span class="muted">·</span><span>{{ vet.clinic.city }}</span>{% endif %}
+      </div>
     {% endif %}
-    <div class="rating-line">
-      <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= vet.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-      <span>{{ vet.rating|floatformat:1 }}</span>
-      <span style="opacity:.85;font-weight:400">· {{ vet.reviews_count }} {{ vet.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</span>
+    <div class="vet-specs-row">
+      {% for s in vet.specializations.all %}<span class="tag tag-brand">{{ s.name }}</span>{% endfor %}
     </div>
-    <div class="specs">
-      {% for s in vet.specializations.all %}<span>{{ s.icon }} {{ s.name }}</span>{% endfor %}
+    <div class="vet-meta-line">
+      <span><span class="num-strong num">{{ vet.experience_years }}</span> {{ vet.experience_years|plural_ru:"год,года,лет" }} стажа</span>
+      <span class="muted">·</span>
+      <span><span class="num-strong num">{{ vet.price_consultation|floatformat:0 }} ₽</span> — приём</span>
     </div>
-    <div class="toggles">
-      {% if vet.accepts_online %}<span>💬 Онлайн-консультации</span>{% endif %}
-      {% if vet.accepts_house_call %}<span>🚗 Выезжает на дом</span>{% endif %}
+    {% if vet.accepts_online or vet.accepts_house_call %}
+    <div class="vet-flags">
+      {% if vet.accepts_online %}
+        <span class="flag"><svg class="icon"><use href="#i-video"/></svg>Онлайн-консультации</span>
+      {% endif %}
+      {% if vet.accepts_house_call %}
+        <span class="flag"><svg class="icon"><use href="#i-car"/></svg>Выезжает на дом</span>
+      {% endif %}
     </div>
+    {% endif %}
   </div>
-</div>
-
-<div class="info-cards">
-  <div class="info-card">
-    <div class="lbl">Опыт</div>
-    <div class="val">{{ vet.experience_years }} {{ vet.experience_years|plural_ru:"год,года,лет" }}</div>
-  </div>
-  <div class="info-card">
-    <div class="lbl">Цена приёма</div>
-    <div class="val">от {{ vet.price_consultation|floatformat:0 }} ₽</div>
+  <div class="vet-rating-box">
+    <div class="big num">{{ vet.rating|floatformat:1 }}</div>
+    {% stars vet.rating %}
+    <div class="sub num">{{ vet.reviews_count }} {{ vet.reviews_count|plural_ru:"отзыв,отзыва,отзывов" }}</div>
   </div>
 </div>
 
 <div class="cta-row">
-  <a href="{% url 'appointments:create' vet.pk %}" class="btn">📅 Записаться</a>
-  <a href="{% url 'reviews:add' 'vet' vet.pk %}" class="btn btn-ghost">✍️ Оставить отзыв</a>
+  <a href="{% url 'appointments:create' vet.pk %}" class="btn btn-primary btn-lg">
+    <svg class="icon icon-lg"><use href="#i-calendar"/></svg> Записаться на приём
+  </a>
+  <a href="{% url 'reviews:add' 'vet' vet.pk %}" class="btn btn-outline btn-lg">
+    <svg class="icon icon-lg"><use href="#i-edit"/></svg> Оставить отзыв
+  </a>
 </div>
 
-{% if vet.bio %}
-  <div class="card">
-    <h3 class="section-h" style="margin-top:0">О враче</h3>
-    <p style="white-space:pre-line">{{ vet.bio }}</p>
-  </div>
-{% endif %}
+<div class="grid-main">
+  <div>
+    {% if vet.bio %}
+    <section class="section">
+      <h2>О враче</h2>
+      <div class="body-prose">{{ vet.bio }}</div>
+    </section>
+    {% endif %}
 
-{% if vet.education %}
-  <div class="card">
-    <h3 class="section-h" style="margin-top:0">Образование</h3>
-    <p style="white-space:pre-line">{{ vet.education }}</p>
-  </div>
-{% endif %}
+    {% if vet.education %}
+    <section class="section">
+      <h2>Образование</h2>
+      <div class="body-prose">{{ vet.education }}</div>
+    </section>
+    {% endif %}
 
-{% if services %}
-<div class="card">
-  <h3 class="section-h" style="margin-top:0">Услуги клиники</h3>
-  {% for service in services %}
-    <div class="service-row">
-      <div>
-        <div style="font-weight:600">{{ service.name }}</div>
-        {% if service.description %}<div class="text-muted text-sm">{{ service.description|truncatechars:80 }}</div>{% endif %}
-      </div>
-      <div class="price">{{ service.price|floatformat:0 }} ₽</div>
-    </div>
-  {% endfor %}
-</div>
-{% endif %}
-
-<div class="card" id="reviews">
-  <div class="flex justify-between items-center mb-2">
-    <h3 class="section-h" style="margin:0">Отзывы пациентов</h3>
-    <a href="{% url 'reviews:add' 'vet' vet.pk %}" class="btn btn-sm">+ Отзыв</a>
-  </div>
-  {% if reviews %}
-    {% for r in reviews %}
-      <div class="review-item">
-        <div class="review-head">
-          <span class="author">{{ r.author.get_full_name|default:r.author.username|default:"Аноним" }}</span>
-          <span class="stars">{% for _ in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</span>
-          <span class="date">{{ r.created_at|date:"d.m.Y" }}</span>
-        </div>
-        {% if r.text %}<div class="text">{{ r.text|linebreaksbr }}</div>{% endif %}
-        {% if r.pros or r.cons %}
-        <div class="review-prosc">
-          {% if r.pros %}<div class="pros">➕ {{ r.pros }}</div>{% endif %}
-          {% if r.cons %}<div class="cons">➖ {{ r.cons }}</div>{% endif %}
-        </div>
-        {% endif %}
-        {% if r.clinic_reply %}
-          <div class="mt-2" style="background:var(--gray-light);padding:10px 12px;border-radius:var(--radius-sm);font-size:.85rem;">
-            <strong>Ответ клиники:</strong> {{ r.clinic_reply }}
+    {% if services %}
+    <section class="section">
+      <h2>Услуги клиники</h2>
+      <div class="paper">
+        {% for service in services %}
+          <div class="svc-row">
+            <div>
+              <div class="svc-name">{{ service.name }}</div>
+              {% if service.description %}<div class="small muted" style="margin-top:2px">{{ service.description|truncatechars:120 }}</div>{% endif %}
+            </div>
+            <div class="svc-price num">{{ service.price|floatformat:0 }} ₽</div>
           </div>
-        {% endif %}
+        {% endfor %}
       </div>
-    {% endfor %}
-  {% else %}
-    <div class="no-reviews">
-      <div style="font-size:2.4rem;margin-bottom:6px">🌟</div>
-      <p>Пока нет отзывов. Будь первым!</p>
+    </section>
+    {% endif %}
+
+    <section class="section" id="reviews">
+      <div class="flex justify-between items-baseline mb-3">
+        <h2 style="margin:0">Отзывы пациентов</h2>
+        <a href="{% url 'reviews:add' 'vet' vet.pk %}" class="btn btn-outline btn-sm">
+          <svg class="icon"><use href="#i-plus"/></svg> Написать
+        </a>
+      </div>
+      {% if reviews %}
+        {% for r in reviews %}
+          <div class="review">
+            <div class="review-head">
+              <span class="author">{{ r.author.get_full_name|default:r.author.username|default:"Аноним" }}</span>
+              {% stars r.rating %}
+              <span class="date">{{ r.created_at|date:"d.m.Y" }}</span>
+            </div>
+            {% if r.text %}<div class="body">{{ r.text|linebreaksbr }}</div>{% endif %}
+            {% if r.pros or r.cons %}
+              <div class="prosc">
+                {% if r.pros %}<div class="pros"><span class="lbl">Плюсы</span> · {{ r.pros }}</div>{% endif %}
+                {% if r.cons %}<div class="cons"><span class="lbl">Минусы</span> · {{ r.cons }}</div>{% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="muted">Отзывов пока нет — будьте первым.</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <aside>
+    <div class="sticky-cta">
+      <div class="eyebrow mb-1">Стоимость приёма</div>
+      <div class="price-big num">от {{ vet.price_consultation|floatformat:0 }} ₽</div>
+      <div class="price-meta">{{ vet.experience_years }} {{ vet.experience_years|plural_ru:"год,года,лет" }} опыта</div>
+      <a href="{% url 'appointments:create' vet.pk %}" class="btn btn-primary btn-block">
+        <svg class="icon"><use href="#i-calendar"/></svg> Записаться
+      </a>
+      {% if vet.clinic %}
+        <div class="clinic-mini">
+          <div class="eyebrow mb-1">Клиника</div>
+          <a href="{% url 'clinics:public_clinic_detail' vet.clinic.pk %}" style="color:var(--ink)">{{ vet.clinic.name }}</a>
+          {% if vet.clinic.address %}<div class="muted small" style="margin-top:4px">{{ vet.clinic.address }}</div>{% endif %}
+        </div>
+      {% endif %}
     </div>
-  {% endif %}
+  </aside>
 </div>
+
 {% endblock %}

@@ -1,0 +1,14 @@
+<span class="stars" aria-label="Оценка {{ value|floatformat:1 }} из 5">{% spaceless %}
+{% for p in parts %}
+  {% if p == 'full' %}
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.8L6.6 19.7l1-6L3.2 9.4l6.1-.9L12 3Z"/></svg>
+  {% elif p == 'half' %}
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <defs><linearGradient id="hs"><stop offset="50%" stop-color="currentColor"/><stop offset="50%" stop-color="#e9e3d3"/></linearGradient></defs>
+      <path fill="url(#hs)" d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.8L6.6 19.7l1-6L3.2 9.4l6.1-.9L12 3Z"/>
+    </svg>
+  {% else %}
+    <svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.8L6.6 19.7l1-6L3.2 9.4l6.1-.9L12 3Z"/></svg>
+  {% endif %}
+{% endfor %}
+{% endspaceless %}</span>

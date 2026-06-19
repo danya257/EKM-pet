@@ -1,56 +1,95 @@
 {% extends 'base.html' %}
-{% block title %}Оставить отзыв — {{ target }}{% endblock %}
+{% load vetka %}
+{% block title %}Оставить отзыв — EKM · vet{% endblock %}
 
 {% block extra_head %}
 <style>
-  .star-pick { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+  .wrap { max-width: 600px; margin: 0 auto; }
+
+  .star-pick { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; padding: 4px 0; }
   .star-pick input { display: none; }
   .star-pick label {
-    cursor: pointer; font-size: 2.2rem; color: #d0d3dc;
-    transition: color var(--transition);
+    cursor: pointer; line-height: 1;
+    color: #d8d3c4; transition: color .12s;
   }
+  .star-pick label svg { width: 32px; height: 32px; fill: currentColor; }
   .star-pick input:checked ~ label,
   .star-pick label:hover,
-  .star-pick label:hover ~ label { color: #ffb347; }
+  .star-pick label:hover ~ label { color: var(--gold); }
+
+  .target-summary {
+    padding: 14px 18px;
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  }
+  .target-summary .lbl { font-size: 11px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+  .target-summary .name { font-family: var(--font-serif); font-size: 18px; font-weight: 600; margin-top: 2px; }
+  .target-summary a { color: var(--mute); font-size: 13px; text-decoration: none; }
+  .target-summary a:hover { color: var(--ink); text-decoration: underline; }
+
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .form-grid-2 { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
 
 {% block content %}
-<a href="{{ target.get_absolute_url }}" class="text-muted text-sm" style="text-decoration:none">← Назад</a>
 
-<h1 class="mt-2">Отзыв о {{ target }}</h1>
+<div class="wrap">
 
-<form method="post" class="card">
-  {% csrf_token %}
+  <a href="{{ target.get_absolute_url }}" class="link-quiet small">
+    <svg class="icon"><use href="#i-arrow-l"/></svg> К карточке
+  </a>
 
-  <div class="field">
-    <label>Оценка</label>
-    <div class="star-pick">
-      {% for radio in form.rating %}
-        {{ radio.tag }}
-        <label for="{{ radio.id_for_label }}" title="{{ radio.choice_label }}">★</label>
-      {% endfor %}
+  <div class="eyebrow mt-2 mb-1">Новый отзыв</div>
+  <h1 style="margin-bottom:24px">Поделитесь опытом</h1>
+
+  <div class="target-summary">
+    <div>
+      <div class="lbl">{% if target_kind == 'vet' %}Врач{% else %}Клиника{% endif %}</div>
+      <div class="name">{{ target }}</div>
     </div>
-    {% if form.rating.errors %}<div class="field-error">{{ form.rating.errors|join:" " }}</div>{% endif %}
+    <a href="{{ target.get_absolute_url }}">К карточке →</a>
   </div>
 
-  <div class="field">
-    <label for="{{ form.text.id_for_label }}">Отзыв</label>
-    {{ form.text }}
-    {% if form.text.errors %}<div class="field-error">{{ form.text.errors|join:" " }}</div>{% endif %}
-  </div>
+  <form method="post" class="paper">
+    {% csrf_token %}
 
-  <div class="grid-2">
     <div class="field">
-      <label for="{{ form.pros.id_for_label }}">➕ Плюсы</label>
-      {{ form.pros }}
+      <label>Оценка</label>
+      <div class="star-pick">
+        {% for radio in form.rating %}
+          {{ radio.tag }}
+          <label for="{{ radio.id_for_label }}" title="{{ radio.choice_label }}">
+            <svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.8L6.6 19.7l1-6L3.2 9.4l6.1-.9L12 3Z"/></svg>
+          </label>
+        {% endfor %}
+      </div>
+      {% if form.rating.errors %}<div class="field-error">{{ form.rating.errors|join:" " }}</div>{% endif %}
     </div>
-    <div class="field">
-      <label for="{{ form.cons.id_for_label }}">➖ Минусы</label>
-      {{ form.cons }}
-    </div>
-  </div>
 
-  <button type="submit" class="btn btn-block btn-lg">Опубликовать отзыв</button>
-</form>
+    <div class="field">
+      <label for="{{ form.text.id_for_label }}">Отзыв</label>
+      {{ form.text }}
+      {% if form.text.errors %}<div class="field-error">{{ form.text.errors|join:" " }}</div>{% endif %}
+    </div>
+
+    <div class="form-grid-2">
+      <div class="field">
+        <label for="{{ form.pros.id_for_label }}">Плюсы</label>
+        {{ form.pros }}
+      </div>
+      <div class="field">
+        <label for="{{ form.cons.id_for_label }}">Минусы</label>
+        {{ form.cons }}
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block btn-lg">Опубликовать отзыв</button>
+  </form>
+
+</div>
+
 {% endblock %}
