@@ -65,9 +65,10 @@ INSTALLED_APPS = [
     # Third-party apps
     'whitenoise.runserver_nostatic',  # Можно оставить, не мешает
     'rest_framework',
-    'rest_framework.authtoken', 
+    'rest_framework.authtoken',
     'drf_spectacular',
-    
+    'oauth2_provider',
+
     # Local apps
     'users',
     'api',
@@ -81,6 +82,7 @@ INSTALLED_APPS = [
     'dashboard',
     'reviews',
     'appointments',
+    'integrations',
     # 'vetmis',
 ]
 
@@ -161,7 +163,23 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', 
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# =============================================================================
+# OAUTH 2.0 (django-oauth-toolkit) — для МИС
+# =============================================================================
+OAUTH2_PROVIDER = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 60 * 60,           # 1 час
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 60 * 60 * 24 * 30, # 30 дней (не используется для client_creds)
+    'ROTATE_REFRESH_TOKEN': True,
+    'SCOPES': {
+        'mis:read':  'Чтение каталога и заявок',
+        'mis:write': 'Запись итогов визитов и прайса',
+    },
+    'DEFAULT_SCOPES': ['mis:read'],
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'PKCE_REQUIRED': False,  # client_credentials не использует PKCE
 }
 
 # =============================================================================
